@@ -7,7 +7,7 @@ import AuthenView from "../section/authen/view/AuthenView";
 import { SignupView } from "../section/authen/view";
 import LandingPageUser from "../layout";
 import RoomName from "../section/room/roomName";
-import PrivateRoute from "../components/PrivateRoute"; // Đảm bảo đường dẫn đúng
+import PrivateRoute from "../components/PrivateRoute";
 
 export const UserManage = lazy(() => import("../pages/UserManage"));
 export const Authentication = lazy(() => import("../pages/Authentication"));
@@ -98,14 +98,14 @@ export const Router = () => {
           element: <RoomPage />,
         },
         {
-          path: "/user/room/:roomName",
-          element: <RoomName />,
-        },
-        {
           path: "*",
           element: <Error404 />,
         },
       ],
+    },
+    {
+      path: "/user/room/:roomName",
+      element: <RoomName />,
     },
   ]);
 

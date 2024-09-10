@@ -1,16 +1,16 @@
-// src/Login.js
 import React, { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import image from "../assets/account/login.png";
 import { Button, Checkbox, Form, Input } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import jwtDecode from "jwt-decode";
 import Cookies from "js-cookie";
+import axios from "axios";
 
 const Authen = () => {
   const [jwtToken, setJwtToken] = useState("");
-  const [decodedToken, setDecodedToken] = useState(null);
   const navigate = useNavigate();
+
   const onFinish = (values) => {
     console.log("Success:", values);
   };
@@ -19,48 +19,38 @@ const Authen = () => {
     console.log("Failed:", errorInfo);
   };
 
-  // const handleGoogleSuccess = (credentialResponse) => {
-  //   const token = credentialResponse.credential;
-  //   setJwtToken(token);
-  //   console.log("Google Success:", token);
-
-  //   // Decode the JWT to get user information
-  //   const decoded = jwtDecode(token);
-  //   setDecodedToken(decoded);
-  //   console.log("Decoded Token:", decoded);
-
-  //   fetch("https://localhost:7168/api/auth/google", {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({ token }),
-  //   })
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       console.log("Backend response:", data);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error sending token to backend:", error);
-  //     });
-  // };
-  const handleGoogleSuccess = (credentialResponse) => {
+  const handleGoogleSuccess = async (credentialResponse) => {
     const token = credentialResponse.credential;
-    setJwtToken(token);
     console.log("Google Success:", token);
 
-    // Decode the JWT to get user information
-    const decoded = jwtDecode(token);
-    const avatarUrl = decoded.picture;
-    console.log("Decoded Token:", decoded);
+    try {
+      const response = await axios.post(
+        "https://d60f-171-243-48-87.ngrok-free.app/api/auth/google",
+        {
+          idToken: token,
+        }
+      );
 
-    // Save token and avatar to cookies
-    Cookies.set("token", token, { expires: 7 });
-    Cookies.set("avatar", avatarUrl, { expires: 7 });
+      const newToken = response.data.token;
 
-    // Navigate to the home page
-    navigate("/user");
+      if (typeof newToken === "string") {
+        setJwtToken(newToken);
+        const decoded = jwtDecode(newToken);
+        const avatarUrl = decoded.picture;
+        console.log("Decoded Token:", decoded);
+
+        Cookies.set("token", newToken, { expires: 7 });
+        Cookies.set("avatar", avatarUrl, { expires: 7 });
+
+        navigate("/user");
+      } else {
+        console.error("Invalid token format received");
+      }
+    } catch (error) {
+      console.error("Error posting token:", error);
+    }
   };
+
   const handleGoogleError = () => {
     console.log("Google Sign-In Error");
   };
