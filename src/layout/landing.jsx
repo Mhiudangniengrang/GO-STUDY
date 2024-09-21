@@ -7,19 +7,23 @@ import tiktok from "../assets/landingimage/1691751429tiktok-icon-png.png";
 import insta from "../assets/landingimage/1715965947instagram-logo-png (1).png";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
+import Authen from "../section/authen/Authen";
 
 const { Header, Footer, Content } = Layout;
 
 const LandingPage = ({ children }) => {
-  LandingPage.PropTypes = {
+  LandingPage.propTypes = {
     children: PropTypes.node.isRequired,
   };
   return (
     <Layout className="landing-page min-h-screen bg-white">
       <Header className="bg-gradient-to-t from-[#D7DDFF] to-white p-12 shadow-md flex justify-between items-center rounded-b-3xl mb-4 transition duration-500 ease-in-out transform hover:scale-105">
         <Link to="/">
-          <img src={logo} alt="Go Study Logo" className="h-10" /> 
+          <img src={logo} alt="Go Study Logo" className="h-10" />
         </Link>
+        <div className="mt-6">
+          <Authen />
+        </div>
       </Header>
       <Content>{children}</Content>
       <Footer className="bg-gradient-to-t from-blue-200 to-white py-8 px-4 text-center">

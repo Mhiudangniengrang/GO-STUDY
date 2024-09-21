@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Avatar, Layout, Dropdown, Menu } from "antd";
 import logo from "../assets/landingimage/Asset 5.png";
 import fb from "../assets/landingimage/facebook-circle-logo-png.png";
 import tiktok from "../assets/landingimage/1691751429tiktok-icon-png.png";
 import insta from "../assets/landingimage/1715965947instagram-logo-png (1).png";
-import { Link, useLocation, Navigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
+import useAuthen from "../hooks/useAuthen";
 import Cookies from "js-cookie";
 
 const { Header, Footer, Content } = Layout;
@@ -14,31 +15,31 @@ const LandingPageUser = ({ children }) => {
   LandingPageUser.propTypes = {
     children: PropTypes.node.isRequired,
   };
+  const navigate = useNavigate();
+  const { isAuthenticated, infoUser, fetchUserInfo } = useAuthen();
+  const avatarUrl = infoUser.profileImage || "";
+  const userName = infoUser.fullName || "";
 
-  const location = useLocation();
-  const token = Cookies.get("token");
-  const avatarUrl = Cookies.get("avatar");
-
-  // Define navItems array
-  const navItems = [
-    { path: "/user/home", label: "HOME" },
-    { path: "/user/room", label: "ROOM" },
-    { path: "/user/blog", label: "BLOG" },
-    { path: "/user/contact-us", label: "CONTACT US" },
-  ];
-
-  // Redirect to login if no token is found
-  if (!token) {
-    return <Navigate to="/login" />;
-  }
+  useEffect(() => {
+    const userId = Cookies.get("userId");
+    if (isAuthenticated && !infoUser.fullName && userId) {
+      fetchUserInfo(userId);
+    }
+  }, [isAuthenticated, infoUser, fetchUserInfo]);
 
   const handleLogout = () => {
-    Cookies.remove("token");
-    window.location.href = "/login";
+    Cookies.remove("__token");
+    Cookies.remove("userId");
+    navigate("/");
   };
 
   const menu = (
     <Menu>
+      {infoUser.role === 1 && (
+        <Menu.Item key="admin-dashboard">
+          <Link to="/admin/dashboard">Dashboard</Link>
+        </Menu.Item>
+      )}
       <Menu.Item key="profile">
         <Link to="/user/profile">Profile</Link>
       </Menu.Item>
@@ -55,21 +56,28 @@ const LandingPageUser = ({ children }) => {
           <img src={logo} alt="Go Study Logo" className="h-10" />
         </Link>
         <div className="flex space-x-8 justify-center">
-          {navItems.map((item) => (
+          {[
+            { path: "/user/home", label: "HOME" },
+            { path: "/user/room", label: "ROOM" },
+            { path: "/user/blog", label: "BLOG" },
+            { path: "/user/contact-us", label: "CONTACT US" },
+          ].map((item) => (
             <Link
               key={item.path}
               to={item.path}
               className={`text-[#034EA1] hover:text-orange-500 font-black relative ${
-                location.pathname === item.path ? "text-orange-500" : ""
+                window.location.pathname === item.path ? "text-orange-500" : ""
               }`}
             >
               {item.label}
             </Link>
           ))}
         </div>
-        <Dropdown overlay={menu} trigger={["click"]}>
-          <Avatar src={avatarUrl} size="large" className="cursor-pointer" />
-        </Dropdown>
+        <div className="flex items-center">
+          <Dropdown overlay={menu} trigger={["click"]}>
+            <Avatar src={avatarUrl} size="large" className="cursor-pointer" />
+          </Dropdown>
+        </div>
       </Header>
       <Content>{children}</Content>
       <Footer className="bg-gradient-to-t from-blue-200 to-white py-8 px-4 text-center">

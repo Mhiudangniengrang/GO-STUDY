@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet";
-import { AuthenView, SignupView } from "../section/authen/view";
+import { AuthenView } from "../section/authen/view";
 
 function Authentication() {
   return (
@@ -8,7 +8,6 @@ function Authentication() {
         <title> GO! Study | Login </title>
       </Helmet>
       <AuthenView />
-      <SignupView />
     </>
   );
 }

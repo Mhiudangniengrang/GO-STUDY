@@ -1,16 +1,23 @@
-import { Outlet, useRoutes } from "react-router-dom";
+import { Navigate, Outlet, useRoutes } from "react-router-dom";
 import { Suspense, lazy } from "react";
-import { Error404, Loading, ScrollToTop } from "../components";
+import {
+  AdminError,
+  Error404,
+  Loading,
+  ScrollToTop,
+  Unauthorized,
+} from "../components";
 import LandingPage from "../layout/landing";
 import { LandingUserView, LandingView } from "../section/landing/view";
-import AuthenView from "../section/authen/view/AuthenView";
-import { SignupView } from "../section/authen/view";
 import LandingPageUser from "../layout";
-import RoomName from "../section/room/roomName";
-import PrivateRoute from "../components/PrivateRoute";
-
-export const UserManage = lazy(() => import("../pages/UserManage"));
-export const Authentication = lazy(() => import("../pages/Authentication"));
+import AdminLayout from "../layout/admin";
+import DashboardPage from "../pages/DashboardPage";
+import { UserView } from "../section/admin/User/view";
+import { RoomViewList } from "../section/admin/RoomManage/view";
+import { PaymentView } from "../section/admin/Payment/view";
+import RoomZego from "../section/room/roomZego";
+import useAuthen from "../hooks/useAuthen";
+lazy(() => import("../pages/Authentication"));
 export const PaymentPage = lazy(() => import("../pages/PaymentPage"));
 export const RulesPage = lazy(() => import("../pages/RulesPage"));
 export const ContactPage = lazy(() => import("../pages/ContactPage"));
@@ -18,8 +25,10 @@ export const ContactUsPage = lazy(() => import("../pages/ContactUsPage"));
 export const BlogPage = lazy(() => import("../pages/BlogPage"));
 export const RoomPage = lazy(() => import("../pages/RoomPage"));
 export const HomePage = lazy(() => import("../pages/HomePage"));
-
+export const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 export const Router = () => {
+  const { isAuthenticated, infoUser } = useAuthen();
+
   const routes = useRoutes([
     {
       path: "/",
@@ -38,14 +47,6 @@ export const Router = () => {
           element: <LandingView />,
         },
         {
-          path: "/login",
-          element: <AuthenView />,
-        },
-        {
-          path: "/sign-up",
-          element: <SignupView />,
-        },
-        {
           path: "*",
           element: <Error404 />,
         },
@@ -53,21 +54,25 @@ export const Router = () => {
     },
     {
       path: "/user",
-      element: (
-        <PrivateRoute>
-          <LandingPageUser>
-            <ScrollToTop>
-              <Suspense fallback={<Loading />}>
-                <Outlet />
-              </Suspense>
-            </ScrollToTop>
-          </LandingPageUser>
-        </PrivateRoute>
+      element: isAuthenticated ? (
+        <LandingPageUser>
+          <ScrollToTop>
+            <Suspense fallback={<Loading />}>
+              <Outlet />
+            </Suspense>
+          </ScrollToTop>
+        </LandingPageUser>
+      ) : (
+        <Navigate to="/" />
       ),
       children: [
         {
           path: "/user",
           element: <LandingUserView />,
+        },
+        {
+          path: "/user/profile",
+          element: <ProfilePage />,
         },
         {
           path: "/user/home",
@@ -104,8 +109,42 @@ export const Router = () => {
       ],
     },
     {
-      path: "/user/room/:roomName",
-      element: <RoomName />,
+      path: "/admin",
+      element:
+        isAuthenticated && infoUser.role === 1 ? (
+          <AdminLayout>
+            <ScrollToTop>
+              <Suspense fallback={<Loading />}>
+                <Outlet />
+              </Suspense>
+            </ScrollToTop>
+          </AdminLayout>
+        ) : (
+          <Unauthorized />
+        ),
+      children: [
+        {
+          path: "/admin/dashboard",
+          element: <DashboardPage />,
+        },
+        {
+          path: "/admin/user/view",
+          element: <UserView />,
+        },
+        {
+          path: "/admin/room/view",
+          element: <RoomViewList />,
+        },
+        {
+          path: "/admin/payment/view",
+          element: <PaymentView />,
+        },
+        { element: <AdminError />, path: "*" },
+      ],
+    },
+    {
+      path: "/user/room/:roomId",
+      element: <RoomZego />,
     },
   ]);
 
