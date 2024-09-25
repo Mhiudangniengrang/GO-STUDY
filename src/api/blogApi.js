@@ -6,9 +6,14 @@ const getBlog = (userId) => {
 const getAllBlog = () => {
   return axiosClient.get("/api/BlogPost");
 };
-const postBlogUser = (userId, blogData) => {
-  return axiosClient.post(`/api/BlogPost?userId=${userId}`, blogData);
+const postBlogUser = (userid, formData) => {
+  return axiosClient.post(`/api/BlogPost?userid=${userid}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 };
+
 const deleteBlogUser = (postId) => {
   return axiosClient.delete(`/api/BlogPost/${postId}`);
 };

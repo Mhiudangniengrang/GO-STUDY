@@ -1,26 +1,35 @@
-import React, { useEffect, useMemo, useState } from "react";
 import {
-  Avatar,
-  Input,
+  InboxOutlined,
+  LineChartOutlined,
+  PlusOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import {
   Button,
-  Tabs,
+  Input,
   Modal,
+  Tabs,
   Upload,
   message,
   notification,
 } from "antd";
-import {
-  SearchOutlined,
-  PlusOutlined,
-  LineChartOutlined,
-  InboxOutlined,
-} from "@ant-design/icons";
-import YourBlog from "./yourBlog";
-import TrendingTab from "./trendingTab";
-import Archive from "./archive";
+import Cookies from "js-cookie";
+import React, { useEffect, useMemo, useState } from "react";
 import useAuthen from "../../hooks/useAuthen";
 import useBlog from "../../hooks/useBlog";
-import Cookies from "js-cookie";
+import Archive from "./archive";
+import TrendingTab from "./trendingTab";
+import YourBlog from "./yourBlog";
+
+// Cloudinary import
+import { Cloudinary } from "@cloudinary/url-gen";
+
+// Tạo instance Cloudinary
+const cloudinary = new Cloudinary({
+  cloud: {
+    cloudName: "dphupjpqt", // Thay bằng cloud_name của bạn từ Cloudinary Dashboard
+  },
+});
 
 function Blog() {
   const [collapsed, setCollapsed] = useState(false);
@@ -34,8 +43,34 @@ function Blog() {
   const [content, setContent] = useState("");
   const [images, setImages] = useState([]);
 
-  const showModal = () => {
-    setVisible(true);
+  const showModal = () => setVisible(true);
+
+  const uploadImages = async (images) => {
+    const imageUrls = await Promise.all(
+      images.map(async (image) => {
+        const formData = new FormData();
+        formData.append("file", image);
+        formData.append("upload_preset", "ml_default"); // unsigned preset
+
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/dphupjpqt/image/upload`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error("Cloudinary upload error:", data);
+          throw new Error("Image upload failed");
+        }
+
+        return data.secure_url;
+      })
+    );
+    return imageUrls;
   };
 
   const handleOk = async () => {
@@ -49,43 +84,45 @@ function Blog() {
     }
 
     const userId = Cookies.get("userId");
-    const blogData = {
-      userId: userId,
-      title: "",
-      content: content,
-      image:
-        images.length > 0
-          ? URL.createObjectURL(images[0])
-          : "default-image.png",
-    };
-
     try {
+      const imageUrls = await uploadImages(images); // Upload all images
+
+      console.log("Images uploaded successfully:", imageUrls);
+
+      const blogData = {
+        title: "123",
+        content: content,
+        images: imageUrls, // Save the array of URLs
+      };
+
       await fetchPostBlog(userId, blogData);
       notification.success({
         message: "Create Successful",
         description: "You have posted successfully.",
         duration: 2,
       });
-      setVisible(false);
-      setContent("");
-      setImages([]);
+      resetForm();
       fetchGetBlog(userId);
     } catch (error) {
-      console.error(
-        "Error posting blog:",
-        error.response?.data || error.message
+      message.error(
+        "Error posting blog: " + (error.response?.data || error.message)
       );
+      console.error("Error posting blog:", error);
     }
   };
 
+  const resetForm = () => {
+    setVisible(false);
+    setContent("");
+    setImages([]);
+  };
+
   const handleImageUpload = ({ fileList }) => {
-    setImages(fileList.map((file) => file.originFileObj));
+    setImages(fileList.map((file) => file.originFileObj || file.url)); // Xử lý cả File và URL
   };
 
   const handleCancel = () => {
-    setVisible(false);
-    setContent(""); 
-    setImages([]); 
+    resetForm();
   };
 
   useEffect(() => {
@@ -119,6 +156,7 @@ function Blog() {
     ],
     []
   );
+
   return (
     <>
       <div className="flex flex-col md:flex-row space-y-5 md:space-x-10">
@@ -138,6 +176,7 @@ function Blog() {
             <div className="flex flex-col md:flex-row justify-between mt-3">
               <Tabs
                 defaultActiveKey="2"
+                activeKey={activeTab}
                 onChange={(key) => setActiveTab(key)}
                 className="flex-grow"
                 items={tabItems}
@@ -183,16 +222,20 @@ function Blog() {
             <div className="w-full mb-4">
               <label className="block mb-2">Add images</label>
               <Upload
-                accept=".jpg"
+                accept=".jpg,.jpeg,.png"
                 listType="picture-card"
                 fileList={images.map((image, index) => ({
-                  uid: index,
-                  name: image.name,
+                  uid: index.toString(),
+                  name: image?.name || `image-${index}`, // Kiểm tra nếu image.name không tồn tại
                   status: "done",
-                  url: URL.createObjectURL(image),
+                  url:
+                    image instanceof File ? URL.createObjectURL(image) : image, // Kiểm tra xem image là File hay URL
                 }))}
                 onChange={handleImageUpload}
-                onRemove={() => setImages([])}
+                onRemove={(file) => {
+                  const newImages = images.filter((_, i) => i !== file.uid);
+                  setImages(newImages); // Xóa ảnh khi người dùng bấm remove
+                }}
                 multiple
               >
                 <div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Calendar, theme, Button, Dropdown, Space } from "antd";
 import { Bar } from "react-chartjs-2";
 import {
@@ -14,6 +14,7 @@ import gao from "../assets/account/gao.png";
 import home from "../assets/account/home.png";
 import dayjs from "dayjs";
 import { DownOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router";
 
 // Đăng ký các thành phần cần thiết
 ChartJS.register(
@@ -105,6 +106,10 @@ function Home() {
     { initials: "RP", color: "bg-teal-500" },
     { initials: "JK", color: "bg-red-400" },
   ];
+  const navigate = useNavigate();
+  const handleClick = () => {
+    navigate("/user/calendar/task");
+  };
   return (
     <div className="flex flex-col items-center space-y-6 p-6 mb-5">
       <div className="flex justify-between w-full max-w-6xl">
@@ -233,7 +238,10 @@ function Home() {
         </div>
 
         <div style={wrapperStyle} className="h-80 ml-6 flex flex-col">
-          <Calendar fullscreen={false} onPanelChange={onPanelChange} />
+          <div onClick={handleClick}>
+            <Calendar fullscreen={false} onPanelChange={onPanelChange} />
+          </div>
+
           <div className="flex justify-end">
             <Button className="bg-[#034EA1] text-white my-3">Attendance</Button>
           </div>

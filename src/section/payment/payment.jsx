@@ -1,122 +1,208 @@
-import React, { useState, useEffect } from "react";
-import { Input, Button, Select, Checkbox, Typography } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
-import { useLocation } from "react-router-dom";
-import vnpay from "../assets/payment/vnpay.png";
-import momo from "../assets/payment/momo.png";
-import zalo from "../assets/payment/zalopay.png";
+import React, { useEffect, useState } from "react";
+import { Input, Button, Typography, Modal } from "antd";
+import { useLocation, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import payOs from "../assets/payment/payos.png";
+import usePayment from "../../hooks/usePayment";
+import { Loading } from "../../components";
+
+function generatePaymentRefId() {
+  return Math.floor(100000000 + Math.random() * 900000000).toString();
+}
 
 function Payment() {
   const location = useLocation();
-  const planName = location.state?.planName;
-  const price = parseFloat(location.state?.price.replace(".", "")) || 59000;
-  const [discountCode, setDiscountCode] = useState("");
-  const [total, setTotal] = useState(price);
+  const navigate = useNavigate();
+  const packageId = location.pathname.split("/").pop();
+  const userId = Cookies.get("userId");
+  const {
+    paymentInfo,
+    fetchGetPaymentInfo,
+    fetchPostPayment,
+    pollPaymentStatus,
+  } = usePayment();
+
+  const [total, setTotal] = useState(0);
+  const [phone, setPhone] = useState("");
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [orderCode, setOrderCode] = useState("");
+  const [paymentData, setPaymentData] = useState({
+    transactionId: 12345,
+    amount: 0,
+    paymentCurrency: "USD",
+    paymentContent: "Payment for online course",
+    paymentRefId: generatePaymentRefId(),
+    packageID: packageId,
+    userId: userId,
+    paymentMethod: "Credit Card",
+    buyerName: "",
+    buyerEmail: "",
+    buyerPhone: "",
+    title: "Online Course Payment",
+    description: "Payment for access to the course.",
+  });
 
   useEffect(() => {
-    setTotal(price);
-  }, [price]);
+    if (userId && packageId) {
+      fetchGetPaymentInfo(userId, packageId)
+        .then(() => console.log("Payment info fetched successfully"))
+        .catch((error) => console.error("Failed to fetch payment info", error));
+    }
+  }, [userId, packageId, fetchGetPaymentInfo]);
 
-  const handleApplyDiscount = () => {
-    if (discountCode === "BUY1") {
-      setTotal(price * 0.9);
+  useEffect(() => {
+    if (paymentInfo && paymentInfo.package && paymentInfo.user) {
+      const { price, name } = paymentInfo.package;
+      const { fullName, email } = paymentInfo.user;
+
+      setTotal(price);
+      setPaymentData((prevData) => ({
+        ...prevData,
+        amount: price,
+        buyerName: fullName,
+        buyerEmail: email,
+      }));
+    }
+  }, [paymentInfo]);
+
+  const handlePaymentSubmit = async () => {
+    setLoading(true);
+    try {
+      const updatedPaymentData = {
+        ...paymentData,
+        buyerPhone: phone,
+        amount: total,
+      };
+
+      const paymentResponse = await fetchPostPayment(updatedPaymentData);
+
+      if (paymentResponse) {
+        const { orderCode, checkoutUrl } = paymentResponse;
+        if (orderCode) {
+          setOrderCode(orderCode.toString());
+          pollPaymentStatus(orderCode.toString(), navigate);
+          window.location.href = checkoutUrl;
+        }
+      } else {
+        console.error("Payment response is undefined");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Payment submission failed", error);
+      setLoading(false);
     }
   };
+
+  const showModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleOk = () => {
+    if (phone.trim()) {
+      setIsModalVisible(false);
+      handlePaymentSubmit();
+    } else {
+      console.error("Phone number is required");
+    }
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  if (!paymentInfo) {
+    return (
+      <div>
+        <Loading />
+      </div>
+    );
+  }
+
+  const packagePrice = paymentInfo?.package?.price || 0;
+  const packageName = paymentInfo?.package?.name || "";
+  const userEmail = paymentInfo?.user?.email || "";
 
   return (
     <div className="flex justify-center items-center max-h-screen bg-white">
       <div className="bg-white p-10 rounded-lg shadow-lg max-w-6xl mx-4">
-        <div className="flex flex-col md:flex-row">
-          <div className="flex-1 mb-6 md:mb-0 md:mr-6">
-            <h2 className="text-3xl font-bold mb-4">Let's Make Payment</h2>
-            <p className="text-gray-600 mb-8">
-              To start your subscription, input your card details to make
-              payment. You will be redirected to your bank's authorization page.
-            </p>
-            <div
-              className="p-10 flex flex-col justify-center rounded-lg text-black mb-6 h-full max-h-60"
-              style={{
-                background: "linear-gradient(#F36F20,#FDC29F, #F0F0F0)",
-              }}
-            >
-              <div className="flex flex-col">
-                <h3 className="text-2xl text-[#71717a]">You're paying,</h3>
-                <p className="text-4xl font-bold mt-2">
-                  {price.toLocaleString()} VND
-                </p>
+        {loading ? (
+          <Loading />
+        ) : (
+          <div className="flex flex-col md:flex-row">
+            <div className="flex-1 mb-6 md:mb-0 md:mr-6">
+              <h2 className="text-3xl font-bold mb-4">Let's Make Payment</h2>
+              <p className="text-gray-600 mb-8">
+                To start your subscription, input your card details to make
+                payment. You will be redirected to your bank's authorization
+                page.
+              </p>
+              <div
+                className="p-10 flex flex-col justify-center rounded-lg text-black mb-5 h-full max-h-60"
+                style={{
+                  background: "linear-gradient(#F36F20,#FDC29F, #F0F0F0)",
+                }}
+              >
+                <div className="flex flex-col">
+                  <h3 className="text-2xl text-[#71717a]">You're paying,</h3>
+                  <p className="text-4xl font-bold mt-2">
+                    {packagePrice.toLocaleString()} VND
+                  </p>
+                </div>
+                <div className="flex justify-between mt-4 w-full">
+                  <p className="text-lg">{packageName}</p>
+                  <p className="text-lg">{packagePrice.toLocaleString()} VND</p>
+                </div>
               </div>
 
-              <div className="flex justify-between mt-4 w-full">
-                <p className="text-lg">{planName}</p>
-                <p className="text-lg">{price.toLocaleString()} VND</p>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <p>Subtotal: </p>
+                  <p>{packagePrice.toLocaleString()} VND</p>
+                </div>
+
+                <div className="flex justify-between">
+                  <p className="font-bold">Total:</p>
+                  <p>{total.toLocaleString()} VND</p>
+                </div>
               </div>
             </div>
-            <Input
-              placeholder="Discount Code"
-              value={discountCode}
-              onChange={(e) => setDiscountCode(e.target.value)}
-              suffix={<Button onClick={handleApplyDiscount}>Apply</Button>}
-              className="mb-4"
-            />
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <p>Subtotal: </p>
-                <p>{price.toLocaleString()} VND</p>
+            <div className="flex-1">
+              <Typography className="font-bold mb-2">Email</Typography>
+              <Input
+                placeholder="Email"
+                className="mb-4"
+                value={userEmail}
+                readOnly
+              />
+              <Typography className="font-bold mb-2">Phone number</Typography>
+              <Input
+                placeholder="Phone number"
+                className="mb-4"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+              <div className="flex justify-between mb-4">
+                <h4 className="font-bold">Payment method</h4>
               </div>
-              <div className="flex justify-between">
-                <p>Shipping Cost: </p>
-                <p>0.00 VND</p>
+              <div className="flex p-4 rounded-lg">
+                <img src={payOs} alt="PayOs" className="w-32 h-32 rounded-md" />
               </div>
-              <div className="flex justify-between">
-                <p>Discount: </p>
-                <p>{discountCode === "BUY1" ? "10%" : "0%"}</p>
-              </div>
-              <div className="flex justify-between">
-                <p className="font-bold">Total:</p>
-                <p>{total.toLocaleString()} VND</p>
-              </div>
+              <Button type="primary" onClick={showModal}>
+                Thanh toán
+              </Button>
             </div>
           </div>
-          <div className="flex-1">
-            <Typography className="font-bold mb-2">Email</Typography>
-            <Input placeholder="Email" className="mb-4" />
-            <Typography className="font-bold mb-2">Phone number</Typography>
-            <Input placeholder="Phone number" className="mb-4" />
-            <div className="flex justify-between mb-4">
-              <h4 className="font-bold">Payment method</h4>
-              <span className="text-[#034EA1]">
-                <PlusOutlined className="mx-2" />
-                Add new
-              </span>
-            </div>
-            <div className="flex space-x-4 mb-4">
-              <img src={vnpay} alt="VNPay" className="w-16" />
-              <img src={momo} alt="MoMo" className="w-16" />
-              <img src={zalo} alt="ZaloPay" className="w-16" />
-            </div>
-            <Typography className="font-bold mb-2">Billing address</Typography>
-            <Select className="w-full mb-4">
-              <Select.Option value="us">United States</Select.Option>
-            </Select>
-            <div className="flex flex-col md:flex-row md:space-x-4 mb-4">
-              <div className="flex-1 mb-4 md:mb-0">
-                <Typography className="font-bold mb-2">Zip code</Typography>
-                <Input />
-              </div>
-              <div className="flex-1">
-                <Typography className="font-bold mb-2">City</Typography>
-                <Input placeholder="City" />
-              </div>
-            </div>
-            <Checkbox className="mb-4">
-              Billing address is same as shipping
-            </Checkbox>
-            <Button type="primary" className="w-full">
-              Pay {total.toLocaleString()} VND
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
+      <Modal
+        title="Payment Confirmation"
+        open={isModalVisible}
+        onOk={handleOk}
+        onCancel={handleCancel}
+      >
+        <p>Are you sure you want to proceed with the payment?</p>
+      </Modal>
     </div>
   );
 }

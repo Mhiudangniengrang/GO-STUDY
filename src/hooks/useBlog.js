@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { deleteBlogUser, getAllBlog, getBlog, postBlogUser } from "../api/blogApi";
+import {
+  deleteBlogUser,
+  getAllBlog,
+  getBlog,
+  postBlogUser,
+} from "../api/blogApi";
 
 const useBlog = create((set) => ({
   blog: [],
@@ -27,12 +32,15 @@ const useBlog = create((set) => ({
     }
   },
 
-  fetchPostBlog: async (userId, blogData) => {
+  fetchPostBlog: async (userid, formData) => {
     try {
-      const response = await postBlogUser(userId, blogData);
+      const response = await postBlogUser(userid, formData);
       console.log("Blog posted successfully:", response.data);
     } catch (error) {
-      console.error("Error posting blog:", error);
+      console.error(
+        "Error posting blog:",
+        error.response?.data || error.message
+      );
     }
   },
   fetchDeleteBlog: async (postId) => {

@@ -77,15 +77,15 @@ body {
   background: linear-gradient(90deg, #e0eafc, #cfdef3);
 } */
 
-.landing-page .ant-btn-primary {
+/* .landing-page .ant-btn-primary {
   background-color: #ff843a;
   border-color: #ff843a;
-}
+} */
 
-.landing-page .ant-btn-primary:hover {
+/* .landing-page .ant-btn-primary:hover {
   background-color: #ff9650 !important;
   border-color: #ff9650 !important;
-}
+} */
 .landing-page .ant-layout-footer {
   background-color: #f2f5f8;
   color: #333;
@@ -129,9 +129,10 @@ body {
   }
 }
 .custom-modal .ant-modal-content {
-  border: 2px solid orange; 
-  border-radius: 8px; 
+  border: 2px solid orange;
+  border-radius: 8px;
 }
+
 
 .QajuHzlZleFtiTUp_E8u .D9WLyEQaARfWqCTyVrpU {
   height: 320px;

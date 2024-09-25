@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar, Button, Carousel, Select, Space } from "antd";
 
 import user from "../assets/landing/image user.png";
 import LandingPricing from "./landingPricing";
+import useSpecialization from "../../hooks/useSpecialization";
 
 const { Option, OptGroup } = Select;
 
@@ -80,49 +81,14 @@ const videos = [
       "https://images.pexels.com/photos/4050419/pexels-photo-4050419.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   },
 ];
-const majors = [
-  {
-    id: 1,
-    name: "Ngôn ngữ Anh",
-  },
-  {
-    id: 2,
-    name: "Ngôn ngữ Trung",
-  },
-  {
-    id: 3,
-    name: "Ngôn ngữ Nhật",
-  },
-  {
-    id: 4,
-    name: "Kinh tế và Quản trị",
-  },
-  {
-    id: 5,
-    name: "Marketing",
-  },
-  {
-    id: 6,
-    name: "Truyền thông và Báo chí",
-  },
-  {
-    id: 7,
-    name: "Design",
-  },
-  {
-    id: 8,
-    name: "Khoa học kỹ thuật và Công nghệ",
-  },
-  {
-    id: 9,
-    name: "Công nghiệp và Xây dựng",
-  },
-  {
-    id: 10,
-    name: "Môn đại cương",
-  },
-];
+
 function LandingUser() {
+  const { specialization, fetchGetSpecialization } = useSpecialization();
+  const [selectedMajors, setSelectedMajors] = useState([]);
+
+  useEffect(() => {
+    fetchGetSpecialization();
+  }, [fetchGetSpecialization]);
   return (
     <>
       <div className="flex flex-col lg:flex-row justify-between mt-10 bg-white">
@@ -136,47 +102,36 @@ function LandingUser() {
           </div>
           <div className="my-8 space-y-4">
             <Select
-              placeholder="Choose your major"
+              mode="multiple"
+              placeholder="Choose your majors"
               className="w-full lg:w-4/5 text-center custom-select"
               size="large"
+              value={selectedMajors}
+              onChange={setSelectedMajors}
+              maxTagCount={2} 
+              maxTagPlaceholder={(omittedValues) =>
+                `+${omittedValues.length} more`
+              } 
             >
-              {majors.map((major) => (
-                <Select.Option
-                  key={major.id}
-                  value={major.name}
-                ></Select.Option>
+              {specialization.map((major) => (
+                <Option key={major.id} value={major.name}>
+                  {major.name}
+                </Option>
               ))}
             </Select>
-            {/* <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-              <Select
-                mode="multiple"
-                placeholder="Choose your subject"
-                className="w-full lg:w-4/5 text-center custom-select"
-                size="large"
-                maxTagCount={2}
-                maxTagPlaceholder={(omittedValues) => `+${omittedValues.length} more`}
-                dropdownStyle={{ whiteSpace: 'pre-wrap' }}
-              >
-                <Option value="subject1">Subject1</Option>
-                <Option value="subject2">Subject2</Option>
-                <Option value="subject3">Subject3</Option>
-                <Option value="subject4">Subject4</Option>
-                <Option value="subject5">Subject5</Option>
-              </Select>
-            </Space> */}
           </div>
           <div className="flex justify-center lg:justify-start space-x-5">
             <Button
               type="default"
               size="large"
-              className="bg-orange-500 text-white w-[35%] "
+              className="bg-orange-500 text-white w-[40%] "
             >
               Confirm
             </Button>
             <Button
               type="default"
               size="large"
-              className="border-orange-500 text-orange-500 w-1/3"
+              className="border-orange-500 text-orange-500 w-[36%]"
             >
               Skip
             </Button>

@@ -1,16 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button, Card } from "antd";
 import { PhoneOutlined, MailOutlined, HomeOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import usePackage from "../../hooks/usePackage";
 
 function LandingPricing() {
   const navigate = useNavigate();
+  const { packages, fetchGetPackage } = usePackage();
+
+  useEffect(() => {
+    fetchGetPackage();
+  }, [fetchGetPackage]);
+
+  const handleGetStarted = (id) => {
+    navigate(`/user/payment/${id}`);
+  };
 
   const plans = [
     {
-      name: "Free",
-      description: "The essentials to provide your best work for clients.",
-      features: [
+      description: [
         "Shows a total of 2 rooms corresponding to 2 subjects",
         "Join the room of 2 subjects, after 3 days of use, you have the right to reset the room ~ subject",
         "Provide symbolic times to be able to enhance the study schedule for subjects",
@@ -20,10 +28,7 @@ function LandingPricing() {
       ],
     },
     {
-      name: "Plus",
-      price: "39.000",
-      description: "A plan that scales with your rapidly growing business.",
-      features: [
+      description: [
         "Unlock 4 rooms corresponding to 4 subjects",
         "Join the room of 4 subjects, after 1 day of use, you have the right to reset the room ~ subject",
         "Provide a timetable to be able to schedule classes for subjects",
@@ -35,10 +40,7 @@ function LandingPricing() {
       ],
     },
     {
-      name: "Premium",
-      price: "59.000",
-      description: "Dedicated support and infrastructure for your company.",
-      features: [
+      description: [
         "Unlock 6 rooms corresponding to 6 subjects",
         "Join the room of 6 subjects, after 2 hours of use, you have the right to reset the room ~ subject",
         "Provide a timetable to be able to schedule classes for subjects",
@@ -52,10 +54,6 @@ function LandingPricing() {
       ],
     },
   ];
-
-  const handleGetStarted = (planName, price) => {
-    navigate(`/user/payment/${planName}`, { state: { planName, price } });
-  };
 
   return (
     <>
@@ -73,7 +71,7 @@ function LandingPricing() {
             </p>
           </div>
           <div className="mt-12 grid gap-8 lg:grid-cols-3 lg:gap-x-8">
-            {plans.map((plan, index) => (
+            {packages.map((plan, index) => (
               <div
                 key={index}
                 className="flex flex-col justify-between pt-6 bg-white rounded-lg shadow-xl overflow-hidden transition-transform transform hover:scale-105"
@@ -83,7 +81,7 @@ function LandingPricing() {
                     {plan.name}
                   </h3>
                   <p className="mt-4 text-base text-gray-500">
-                    {plan.description}
+                    {plan.features}
                   </p>
                   {plan.price && (
                     <div className="mt-6">
@@ -97,7 +95,7 @@ function LandingPricing() {
                   )}
 
                   <ul className="mt-6 space-y-4">
-                    {plan.features.map((feature, i) => (
+                    {plans[index].description.map((feature, i) => (
                       <li key={i} className="flex items-start">
                         <svg
                           className="flex-shrink-0 h-6 w-6 text-indigo-500"
@@ -122,10 +120,14 @@ function LandingPricing() {
                 </div>
                 <div className="p-6 bg-gray-50">
                   <Button
-                    className="w-full bg-blue-500 text-white"
-                    onClick={() => handleGetStarted(plan.name, plan.price)}
+                    type="primary"
+                    className={`w-full ${
+                      plan.price === 0 ? "bg-gray-300" : "bg-blue-500"
+                    } text-white`}
+                    onClick={() => handleGetStarted(plan.packageId)}
+                    disabled={plan.price === 0}
                   >
-                    {index === 0 ? "Using" : "Get Started"}
+                    {plan.price === 0 ? "Using" : "Get Started"}
                   </Button>
                 </div>
               </div>

@@ -8,7 +8,7 @@ import Cookies from "js-cookie";
 function YourBlog() {
   const { isAuthenticated, infoUser, fetchUserInfo } = useAuthen();
   const { blog, fetchGetBlog, fetchDeleteBlog } = useBlog();
-  const [postId, setPostId] = useState(""); 
+  const [postId, setPostId] = useState("");
   const userName = infoUser.fullName || "User Name";
   const email = infoUser.email || "Not Available";
   const avatarUrl =
@@ -38,19 +38,19 @@ function YourBlog() {
 
   const onClick = async ({ key }, post) => {
     if (key === "2") {
-      setPostId(post.postId); 
+      setPostId(post.postId);
       try {
         await fetchDeleteBlog(post.postId);
         notification.success({
           message: "Delete Successful",
-          description: "You have delete successfully.",
+          description: "You have deleted successfully.",
           duration: 2,
         });
-        fetchGetBlog(Cookies.get("userId")); 
+        fetchGetBlog(Cookies.get("userId"));
       } catch (error) {
         notification.error({
           message: "Delete Failed",
-          description: "You have delete Failed.",
+          description: "Delete failed.",
           duration: 2,
         });
       }
@@ -72,7 +72,7 @@ function YourBlog() {
 
   return (
     <div>
-      <div className="">
+      <div>
         {blog && blog.length > 0 ? (
           blog.map((post, index) => (
             <div
@@ -80,7 +80,7 @@ function YourBlog() {
               className="border rounded-lg p-4 mb-4 shadow-md bg-white border-orange-300"
             >
               <div className="flex justify-between mb-2">
-                <div className="flex ">
+                <div className="flex">
                   <Avatar size={44} src={avatarUrl} />
                   <div className="ml-2">
                     <h2 className="font-bold text-orange-600">{userName}</h2>
@@ -91,7 +91,7 @@ function YourBlog() {
                   <Dropdown
                     menu={{
                       items,
-                      onClick: (e) => onClick(e, post), // Pass post data to onClick
+                      onClick: (e) => onClick(e, post),
                     }}
                     trigger={["click"]}
                   >
@@ -104,7 +104,10 @@ function YourBlog() {
                 </div>
               </div>
               <p className="text-lg">{post.content}</p>
-              <Image width={400} height={200} src={post.image} />{" "}
+              {post.image && (
+                <Image width={400} height={200} src={post.image} />
+              )}
+
               <div className="flex justify-between text-sm text-gray-500 my-3">
                 <p className="text-sm text-gray-400">
                   {formatDate(post.createdAt)}

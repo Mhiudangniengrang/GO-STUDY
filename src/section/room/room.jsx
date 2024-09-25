@@ -1,96 +1,87 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Button, Card, Collapse } from "antd";
+// src/App.js
+import React, { useEffect, useState } from "react";
 import {
-  FaTiktok,
-  FaInstagram,
-  FaFacebook,
-  FaTwitter,
-  FaLinkedin,
-  FaYoutube,
-} from "react-icons/fa";
-
-const { Panel } = Collapse;
+  Card,
+  Avatar,
+  Button,
+  notification,
+  Checkbox,
+  Input,
+  Modal,
+} from "antd";
+import { useNavigate } from "react-router-dom";
+import home from "../assets/account/home.png";
+import gao from "../assets/account/gao.png";
+import roomImg from "../assets/landing/roomimg.png";
+import room from "../assets/landing/room.png";
+import useAuthen from "../../hooks/useAuthen";
+import Cookies from "js-cookie";
+import {
+  EditOutlined,
+  CloseOutlined,
+  PlusOutlined,
+  MinusOutlined,
+  DeleteOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
+import RoomTask from "./roomTask";
+const { Meta } = Card;
 
 function Room() {
+  const navigate = useNavigate();
+  const { isAuthenticated, infoUser, fetchUserInfo } = useAuthen();
+  const avatarUrl = infoUser.profileImage || "";
+  const userName = infoUser.fullName || "";
+  const email = infoUser.email || ";";
+  useEffect(() => {
+    const userId = Cookies.get("userId");
+    if (isAuthenticated && !infoUser.fullName && userId) {
+      fetchUserInfo(userId);
+    }
+  }, [isAuthenticated, infoUser, fetchUserInfo]);
+
   const [rooms, setRooms] = useState([
+    {
+      id: "1",
+      name: "Ngôn ngữ Anh",
+      description: "Cung nhau hoc nao",
+      online: 0,
+    },
+    {
+      id: "2",
+      name: "Ngôn ngữ Trung",
+      description: "Hay hoc cung nhau ",
+      online: 0,
+    },
+    {
+      id: "3",
+      name: "Design",
+      description: "Hay hoc cung nhau ",
+      online: 0,
+    },
+    {
+      id: "4",
+      name: "Marketing",
+      description: "Hay hoc cung nhau ",
+      online: 0,
+    },
+    {
+      id: "5",
+      name: "Marketing",
+      description: "Hay hoc cung nhau ",
+      online: 0,
+    },
+    {
+      id: "6",
+      name: "Marketing",
+      description: "Hay hoc cung nhau ",
+      online: 0,
+    },
+  ]);
+  const lockedRooms = [
     { id: "1", name: "Ngôn ngữ Anh", online: 0 },
     { id: "2", name: "Ngôn ngữ Trung", online: 0 },
-  ]);
-  const testimonials = [
-    {
-      text: "Integer id nunc sit semper purus...",
-      user: "Brenna Goyette",
-      handle: "@brennagoyette",
-      avatar:
-        "https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=1024&h=1024&q=80",
-      logo: "https://tailwindui.com/img/logos/savvycal-logo-gray-900.svg",
-    },
-    {
-      text: "Laborum quis quam. Dolorum et...",
-      user: "Leslie Alexander",
-      handle: "@lesliealexander",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-    {
-      text: "Quia dolorem qui et...",
-      user: "Michael Foster",
-      handle: "@michaelfoster",
-      avatar:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-    {
-      text: "Quia dolorem qui et...",
-      user: "Michael Foster",
-      handle: "@michaelfoster",
-      avatar:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-    {
-      text: "Quia dolorem qui et...",
-      user: "Michael Foster",
-      handle: "@michaelfoster",
-      avatar:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-    {
-      text: "Quia dolorem qui et...",
-      user: "Michael Foster",
-      handle: "@michaelfoster",
-      avatar:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-    {
-      text: "Quia dolorem qui et...",
-      user: "Michael Foster",
-      handle: "@michaelfoster",
-      avatar:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-    {
-      text: "Quia dolorem qui et...",
-      user: "Michael Foster",
-      handle: "@michaelfoster",
-      avatar:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-    {
-      text: "Quia dolorem qui et...",
-      user: "Michael Foster",
-      handle: "@michaelfoster",
-      avatar:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
-    {
-      text: "Quia dolorem qui et...",
-      user: "Michael Foster",
-      handle: "@michaelfoster",
-      avatar:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    },
   ];
-  const navigate = useNavigate();
 
   const joinRoom = (roomId, roomName) => {
     setRooms((prevRooms) =>
@@ -101,165 +92,239 @@ function Room() {
     navigate(`/user/room/${roomId}`, { state: { roomName } });
   };
 
+  const notifyLocked = () => {
+    notification.error({
+      message: "Access Denied",
+      description: "Bạn không thể vào phòng này.",
+    });
+  };
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [tasks, setTasks] = useState([
+    "Hoàn thành bài tập lúc 8h",
+    "Cố gắng hoàn thành trước 7h tối",
+  ]);
+  const [currentTask, setCurrentTask] = useState("");
+  const [editIndex, setEditIndex] = useState(null);
+
+  const showModal = (task = "", index = null) => {
+    setCurrentTask(task);
+    setEditIndex(index);
+    setIsModalVisible(true);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    setCurrentTask("");
+    setEditIndex(null);
+  };
+
+  const handleSave = () => {
+    if (!currentTask.trim()) {
+      message.warning("Task cannot be empty");
+      return;
+    }
+
+    if (editIndex !== null) {
+      const updatedTasks = [...tasks];
+      updatedTasks[editIndex] = currentTask;
+      setTasks(updatedTasks);
+    } else if (tasks.length < 5) {
+      setTasks([...tasks, currentTask]);
+    }
+
+    handleCancel();
+  };
+
+  const handleDelete = (index) => {
+    const updatedTasks = tasks.filter((_, i) => i !== index);
+    setTasks(updatedTasks);
+  };
   return (
-    <>
-      <div className="text-black min-h-screen p-8 w-full max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold mb-2">Find your study room now!</h1>
-          <p className="text-2xl text-gray-500">
-            "Explore, connect, and excel with Go! Study - your pathway to
-            success!"
-          </p>
+    <div className="flex flex-col md:flex-row  min-h-screen">
+      {/* Sidebar */}
+      <div className="w-full md:w-1/5 bg-white p-10 ">
+        <div className="bg-gradient-to-t from-[#C8E2FF] to-white p-4 rounded-lg shadow-md text-center w-[13rem] h-[20rem] mt-5">
+          <div className="flex justify-center">
+            <img src={home} alt="Upgrade Icon" />
+          </div>
+          <h3 className="font-bold text-lg">
+            Upgrade to <span className="text-orange-500">PRO</span> for more
+            features.
+          </h3>
+          <Button
+            size="large"
+            className="mt-4 bg-blue-600 text-white py-2 px-4 rounded-full"
+          >
+            Upgrade
+          </Button>
         </div>
-        <div className="flex justify-end mb-4">
-          <button className="mr-2 bg-gray-700 text-white px-4 py-2 rounded">
-            REPORT AN INCIDENT
-          </button>
-          <button className="bg-gray-700 text-white px-4 py-2 rounded">
-            LEAVE FEEDBACK
-          </button>
+
+        <div className="my-5">
+          <div className="flex items-center mb-4">
+            <Avatar size="large" src={avatarUrl} />
+            <div className="ml-2">
+              <div className="font-bold">{userName}</div>
+            </div>
+          </div>
+          <img src={roomImg} alt="Room Image" className="w-full h-[12rem]" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {rooms.map((room) => (
-            <div
-              key={room.id}
-              className="bg-gray-100 p-4 rounded-lg shadow-md flex flex-col justify-between"
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">{room.name}</h2>
-                <div className="flex items-center">
-                  <span className="bg-green-500 w-2 h-2 rounded-full mr-2"></span>
-                  <span>{room.online} online</span>
+        <RoomTask />
+      </div>
+
+      {/* Main Content */}
+      <div className="w-full md:w-3/5 p-4">
+        <div className="mb-4 p-4 rounded-lg bg-gradient-to-r from-[#5088FF] to-[#DAE5FF] flex items-center">
+          <img src={room} alt="Study Image" className="w-40 h-40 mr-4" />
+          <div className="space-y-3">
+            <h2 className="text-4xl font-medium text-[#034EA1]">
+              Find your study room now!
+            </h2>
+            <p className="text-[#034EA1]">
+              Explore, connect, and excel with Go! Study - your pathway to
+              success!
+            </p>
+          </div>
+        </div>
+
+        {/* Your Room Section */}
+        <div className="mb-8">
+          <h3 className="text-xl font-medium text-[#034EA1] mb-3">Your Room</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {rooms.map((room) => (
+              <div
+                key={room.id}
+                className="bg-gray-100 p-5 py-10 space-y-5 rounded-lg shadow-md flex flex-col justify-between"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <div className="space-y-3">
+                    <h2 className="text-xl font-bold">{room.name}</h2>
+                    <h4 className="text-sm text-gray-500">
+                      {room.description}
+                    </h4>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="bg-green-500 w-2 h-2 rounded-full mr-2"></span>
+                    <span>{room.online} online</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => joinRoom(room.id, room.name)}
+                  className="bg-blue-500 text-white py-2 rounded"
+                >
+                  Join
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* More Room Section */}
+        {/* <div className="mb-8">
+          <h3 className="text-xl font-medium text-[#034EA1]">More Room</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {lockedRooms.map((room) => (
+              <div
+                key={room.id}
+                className="bg-gray-100 p-5 py-10 space-y-5 rounded-lg shadow-md flex flex-col justify-between"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <div className="space-y-3">
+                    <h2 className="text-xl font-bold">{room.name}</h2>
+                    <h4 className="text-sm text-gray-500">
+                      This room is locked.
+                    </h4>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="bg-red-500 w-2 h-2 rounded-full mr-2"></span>
+                    <span>{room.online} online</span>
+                  </div>
+                </div>
+                <button
+                  onClick={notifyLocked}
+                  className="bg-blue-500 text-white py-2 rounded cursor-not-allowed"
+                  disabled
+                >
+                  Join
+                </button>
+              </div>
+            ))}
+          </div>
+        </div> */}
+      </div>
+
+      {/* Right Sidebar */}
+      <div className="w-full md:w-1/5 bg-gray-50 p-4">
+        {/* New Members Section */}
+        <div className="mb-8">
+          <div className="mb-5">
+            <div className="flex justify-center">
+              <Avatar size="large" className="w-32 h-32 mb-3" src={avatarUrl} />
+            </div>
+            <div className="ml-2 flex-col text-center">
+              <div className="font-bold">{userName}</div>
+              <div className="text-gray-500">{email}</div>
+            </div>
+          </div>
+
+          <h3 className="text-lg font-medium text-[#034EA1] flex justify-between">
+            New Members{" "}
+            <span className="text-sm text-blue-500 cursor-pointer">
+              See all
+            </span>
+          </h3>
+          <div className="space-y-3">
+            {[
+              "Anne Couture",
+              "Miriam Soleil",
+              "Marie Laval",
+              "Mark Morain",
+            ].map((name, index) => (
+              <div
+                key={index}
+                className="flex items-center bg-white p-3 rounded-lg shadow-sm"
+              >
+                <Avatar size="small" />
+                <div className="ml-3">
+                  <div className="font-bold">{name}</div>
+                  <div className="text-sm text-gray-500">
+                    {5 + index * 15} min ago
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={() => joinRoom(room.id, room.name)}
-                className="bg-blue-500 text-white py-2 rounded"
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activity Section */}
+        <div>
+          <h3 className="text-lg font-medium text-[#034EA1] flex justify-between">
+            Recent Activity{" "}
+            <span className="text-sm text-blue-500 cursor-pointer">
+              See all
+            </span>
+          </h3>
+          <div className="space-y-3">
+            {[
+              { name: "Hola Spine", action: "invited you to a room" },
+              { name: "Eva Solain", action: "invited you to a chat" },
+              { name: "Pierre Ford", action: "started following you" },
+              { name: "Steve Ater", action: "started following you" },
+            ].map((activity, index) => (
+              <div
+                key={index}
+                className="flex items-center bg-white p-3 rounded-lg shadow-sm"
               >
-                Join
-              </button>
-            </div>
-          ))}
-        </div>
-        <div className="mb-8">
-          <h2 className="text-4xl font-bold mb-4 text-center my-20">
-            Why join a Go! Study Room?
-          </h2>
-          <p className="mb-6 w-[60rem] text-center mx-auto text-lg">
-            Looking for a place to focus and study with strangers? Try our focus
-            rooms. Open 24 hours a day — no matter what timezone or country you
-            live in, there will always be a study room for you.
-          </p>
-          <p className="mb-6 w-[60rem] text-center mx-auto text-lg">
-            The perfect place to boost productivity, make new friends and be
-            more accountable for your studies. Join and study with the Go! Study
-            community today and get one step closer to achieving your goals: get
-            better grades, study abroad, work abroad, and land a dream job.
-          </p>
-        </div>
-        <div className="mb-8 flex justify-between mt-[5rem]">
-          <div>
-            <h2 className="text-4xl font-bold mb-4">About</h2>
-            <h2 className="text-4xl font-bold mb-4">Go! Study</h2>
-            <Button className="bg-white border-black border px-4 py-2 rounded mb-4">
-              READ COMMUNITY GUIDELINES
-            </Button>
-          </div>
-          <Collapse className="text-lg">
-            <Panel header="What is Go! Study and what can I do here?" key="1">
-              <p>Go! Study is a platform where you can join study rooms...</p>
-            </Panel>
-            <Panel
-              header="Do I need to study a specific subject or go to a specific school?"
-              key="2"
-            >
-              <p>No, you can study any subject you like...</p>
-            </Panel>
-            <Panel header="How do I join Go! Study?" key="3">
-              <p>You can join by signing up on the website...</p>
-            </Panel>
-            <Panel
-              header="Who is behind Go! Study and what is their mission?"
-              key="4"
-            >
-              <p>Go! Study is developed by a team of educators...</p>
-            </Panel>
-          </Collapse>
-        </div>
-        <div className="text-center mt-[5rem]">
-          <div className="flex justify-center items-center">
-            <h3 className="text-sm font-bold mb-2 bg-gray-300 rounded-md p-2 w-64">
-              STUDENTS HELPING STUDENTS
-            </h3>
-          </div>
-          <h2 className="text-4xl font-bold mb-4">We ❤️ Go! Study...</h2>
-          <div className="flex justify-center space-x-4 mb-8">
-            <FaTiktok className="text-2xl" />
-            <FaInstagram className="text-2xl" />
-            <FaFacebook className="text-2xl" />
-            <FaTwitter className="text-2xl" />
-            <FaLinkedin className="text-2xl" />
-            <FaYoutube className="text-2xl" />
+                <Avatar size="small" />
+                <div className="ml-3">
+                  <div className="font-bold">{activity.name}</div>
+                  <div className="text-sm text-gray-500">{activity.action}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
-      <div className="marquee-container">
-        <div className="marquee">
-          {testimonials.slice(0, 5).map((testimonial, index) => (
-            <Card key={index} className="p-4 mx-5 inline-block">
-              <blockquote className="text-gray-700 italic mb-4">
-                <p>“{testimonial.text}”</p>
-              </blockquote>
-              <figcaption className="flex items-center">
-                <img
-                  src={testimonial.avatar}
-                  alt={testimonial.user}
-                  className="w-12 h-12 rounded-full mr-3"
-                />
-                <div>
-                  <div className="font-bold">{testimonial.user}</div>
-                  <div className="text-gray-500">{testimonial.handle}</div>
-                </div>
-                {testimonial.logo && (
-                  <img
-                    src={testimonial.logo}
-                    alt="Logo"
-                    className="ml-auto w-16"
-                  />
-                )}
-              </figcaption>
-            </Card>
-          ))}
-        </div>
-        <div className="marquee delay my-4">
-          {testimonials.slice(5).map((testimonial, index) => (
-            <Card key={index} className="p-4 mx-5 inline-block">
-              <blockquote className="text-gray-700 italic mb-4">
-                <p>“{testimonial.text}”</p>
-              </blockquote>
-              <figcaption className="flex items-center">
-                <img
-                  src={testimonial.avatar}
-                  alt={testimonial.user}
-                  className="w-12 h-12 rounded-full mr-3"
-                />
-                <div>
-                  <div className="font-bold">{testimonial.user}</div>
-                  <div className="text-gray-500">{testimonial.handle}</div>
-                </div>
-                {testimonial.logo && (
-                  <img
-                    src={testimonial.logo}
-                    alt="Logo"
-                    className="ml-auto w-16"
-                  />
-                )}
-              </figcaption>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </>
+    </div>
   );
 }
 
