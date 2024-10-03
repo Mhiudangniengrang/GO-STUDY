@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Avatar, Button, Carousel, Select, Space } from "antd";
-
+import { Avatar, Button, Carousel, notification, Select, Space } from "antd";
 import user from "../assets/landing/image user.png";
 import LandingPricing from "./landingPricing";
 import useSpecialization from "../../hooks/useSpecialization";
-
+import { Link, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
+import useAuthen from "../../hooks/useAuthen";
 const { Option, OptGroup } = Select;
-
 const posts = [
   {
     id: 1,
@@ -83,12 +83,49 @@ const videos = [
 ];
 
 function LandingUser() {
-  const { specialization, fetchGetSpecialization } = useSpecialization();
+  const { specialization, fetchGetSpecialization, fetchPostSpecialization } =
+    useSpecialization();
+  const { infoUser, fetchUserInfo } = useAuthen();
   const [selectedMajors, setSelectedMajors] = useState([]);
-
+  const userId = Cookies.get("userId");
+  const navigate = useNavigate();
   useEffect(() => {
     fetchGetSpecialization();
-  }, [fetchGetSpecialization]);
+    fetchUserInfo(userId);
+  }, [fetchGetSpecialization, fetchUserInfo, userId]);
+  console.log("check", infoUser.specialization);
+
+  const handleConfirm = () => {
+    const existingSpecializations = infoUser.specialization.map((spec) =>
+      spec.name.trim()
+    );
+
+    const newMajors = selectedMajors.filter(
+      (major) => !existingSpecializations.includes(major.trim())
+    );
+
+    if (newMajors.length === 0) {
+      notification.warning({
+        message: "Duplicate Specialization",
+        description:
+          "Bạn đã chọn specialization này rồi. Vui lòng chọn specialization khác để tránh bị trùng.",
+      });
+      return;
+    }
+
+    const specializationIds = newMajors
+      .map((major) => {
+        const found = specialization.find(
+          (spec) => spec.name.trim() === major.trim()
+        );
+        return found ? found.specializationId : null;
+      })
+      .filter((specializationId) => specializationId !== null);
+
+    fetchPostSpecialization(userId, specializationIds);
+    navigate("/user/home"); // Navigate only if there are valid new selections
+  };
+
   return (
     <>
       <div className="flex flex-col lg:flex-row justify-between mt-10 bg-white">
@@ -108,10 +145,10 @@ function LandingUser() {
               size="large"
               value={selectedMajors}
               onChange={setSelectedMajors}
-              maxTagCount={2} 
+              maxTagCount={2}
               maxTagPlaceholder={(omittedValues) =>
                 `+${omittedValues.length} more`
-              } 
+              }
             >
               {specialization.map((major) => (
                 <Option key={major.id} value={major.name}>
@@ -124,17 +161,20 @@ function LandingUser() {
             <Button
               type="default"
               size="large"
-              className="bg-orange-500 text-white w-[40%] "
+              className="bg-orange-500 text-white w-[100%] p-20 py-2 rounded-md"
+              onClick={handleConfirm}
             >
               Confirm
             </Button>
-            <Button
-              type="default"
-              size="large"
-              className="border-orange-500 text-orange-500 w-[36%]"
-            >
-              Skip
-            </Button>
+            <Link to="/user/home">
+              <Button
+                type="default"
+                size="large"
+                className="border border-orange-500 text-orange-500 w-[40%] p-20 py-2 rounded-md"
+              >
+                Skip
+              </Button>
+            </Link>
           </div>
         </div>
         <img

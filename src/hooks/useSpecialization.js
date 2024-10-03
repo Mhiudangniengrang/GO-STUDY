@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getSpecialization } from "../api/specialization";
+import { getSpecialization, postSpecialization } from "../api/specialization";
 
 const useSpecialization = create((set) => ({
   specialization: [],
@@ -10,6 +10,14 @@ const useSpecialization = create((set) => ({
       if (res && res.status === 200) {
         set({ specialization: res.data });
       }
+    } catch (err) {
+      console.error("Error fetching spezilation", err);
+    }
+  },
+  fetchPostSpecialization: async (userId, specializationId) => {
+    try {
+      const res = await postSpecialization(userId, specializationId);
+      console.log("postSpecial", res.data);
     } catch (err) {
       console.error("Error fetching spezilation", err);
     }

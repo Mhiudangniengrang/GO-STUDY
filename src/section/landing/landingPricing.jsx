@@ -18,40 +18,13 @@ function LandingPricing() {
 
   const plans = [
     {
-      description: [
-        "Shows a total of 2 rooms corresponding to 2 subjects",
-        "Join the room of 2 subjects, after 3 days of use, you have the right to reset the room ~ subject",
-        "Provide symbolic times to be able to enhance the study schedule for subjects",
-        "Posts in the community are archived, but there are limits",
-        "Chat and exchange with friends in your community",
-        "Graded learning ability by week and by semester",
-      ],
+      description: "The essentials to provide your best work for clients.",
     },
     {
-      description: [
-        "Unlock 4 rooms corresponding to 4 subjects",
-        "Join the room of 4 subjects, after 1 day of use, you have the right to reset the room ~ subject",
-        "Provide a timetable to be able to schedule classes for subjects",
-        "The calendar will pop up in the room to fill in the next lesson",
-        "Store posts in a comfortable community",
-        "Chat and exchange with friends in your community",
-        "Evaluated and ranked learning productivity by day, week and semester",
-        "Light/Dark interface of Study Room",
-      ],
+      description: "A plan that scales with your rapidly growing business.",
     },
     {
-      description: [
-        "Unlock 6 rooms corresponding to 6 subjects",
-        "Join the room of 6 subjects, after 2 hours of use, you have the right to reset the room ~ subject",
-        "Provide a timetable to be able to schedule classes for subjects",
-        "Take notes and save them during the learning process",
-        "Store posts in a comfortable community",
-        "The calendar will pop up in the room to fill in the next lesson",
-        "Chat and exchange with friends in your community",
-        "Evaluated and ranked learning productivity by day, week and semester",
-        "Light/Dark interface of Study Room",
-        "Exclusive 30-day Premium avatar frame interface helps you stand out",
-      ],
+      description: "Dedicated support and infrastructure for your company.",
     },
   ];
 
@@ -81,7 +54,7 @@ function LandingPricing() {
                     {plan.name}
                   </h3>
                   <p className="mt-4 text-base text-gray-500">
-                    {plan.features}
+                    {plans[index] && plans[index].description}
                   </p>
                   {plan.price && (
                     <div className="mt-6">
@@ -95,7 +68,7 @@ function LandingPricing() {
                   )}
 
                   <ul className="mt-6 space-y-4">
-                    {plans[index].description.map((feature, i) => (
+                    {plan.features?.map((feature, i) => (
                       <li key={i} className="flex items-start">
                         <svg
                           className="flex-shrink-0 h-6 w-6 text-indigo-500"
@@ -112,7 +85,7 @@ function LandingPricing() {
                           />
                         </svg>
                         <p className="ml-3 text-base text-gray-500">
-                          {feature}
+                          {feature.name}
                         </p>
                       </li>
                     ))}

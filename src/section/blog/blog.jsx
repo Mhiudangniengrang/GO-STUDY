@@ -17,17 +17,16 @@ import Cookies from "js-cookie";
 import React, { useEffect, useMemo, useState } from "react";
 import useAuthen from "../../hooks/useAuthen";
 import useBlog from "../../hooks/useBlog";
-import Archive from "./archive";
 import TrendingTab from "./trendingTab";
 import YourBlog from "./yourBlog";
 
 // Cloudinary import
 import { Cloudinary } from "@cloudinary/url-gen";
 
-// Tạo instance Cloudinary
+// Create Cloudinary instance
 const cloudinary = new Cloudinary({
   cloud: {
-    cloudName: "dphupjpqt", // Thay bằng cloud_name của bạn từ Cloudinary Dashboard
+    cloudName: "dphupjpqt", // Replace with your Cloudinary cloud name
   },
 });
 
@@ -35,42 +34,58 @@ function Blog() {
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("2");
   const { isAuthenticated, infoUser, fetchUserInfo } = useAuthen();
-  const { fetchPostBlog, fetchGetBlog } = useBlog();
+  const { fetchPostBlogVip, fetchGetBlog } = useBlog();
   const userName = infoUser.fullName || "User name";
   const email = infoUser.email || "Email";
   const avatarUrl = infoUser.profileImage || "Image";
   const [visible, setVisible] = useState(false);
   const [content, setContent] = useState("");
   const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshTrending, setRefreshTrending] = useState(false);
+  const [refreshYourBlog, setRefreshYourBlog] = useState(false);
 
   const showModal = () => setVisible(true);
 
   const uploadImages = async (images) => {
-    const imageUrls = await Promise.all(
-      images.map(async (image) => {
-        const formData = new FormData();
-        formData.append("file", image);
-        formData.append("upload_preset", "ml_default"); // unsigned preset
-
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/dphupjpqt/image/upload`,
-          {
-            method: "POST",
-            body: formData,
+    try {
+      const imageUrls = await Promise.all(
+        images.map(async (image) => {
+          if (typeof image === "string") {
+            return image;
           }
-        );
+          if (image instanceof File) {
+            const formData = new FormData();
+            formData.append("file", image);
+            formData.append("upload_preset", "ml_default");
 
-        const data = await response.json();
+            const response = await fetch(
+              "https://api.cloudinary.com/v1_1/dphupjpqt/image/upload",
+              {
+                method: "POST",
+                body: formData,
+              }
+            );
 
-        if (!response.ok) {
-          console.error("Cloudinary upload error:", data);
-          throw new Error("Image upload failed");
-        }
+            const data = await response.json();
 
-        return data.secure_url;
-      })
-    );
-    return imageUrls;
+            if (!response.ok) {
+              console.error("Cloudinary upload error:", data);
+              throw new Error(data.error.message || "Image upload failed");
+            }
+
+            return data.secure_url;
+          } else {
+            throw new Error("Unsupported image type");
+          }
+        })
+      );
+
+      return imageUrls;
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      throw error;
+    }
   };
 
   const handleOk = async () => {
@@ -84,30 +99,39 @@ function Blog() {
     }
 
     const userId = Cookies.get("userId");
-    try {
-      const imageUrls = await uploadImages(images); // Upload all images
+    if (!userId) {
+      message.error("User ID not found. Please log in again.");
+      return;
+    }
 
+    try {
+      setLoading(true);
+      const imageUrls = await uploadImages(images);
       console.log("Images uploaded successfully:", imageUrls);
 
       const blogData = {
-        title: "123",
+        title: "Sample Title",
         content: content,
-        images: imageUrls, // Save the array of URLs
+        images: imageUrls,
       };
 
-      await fetchPostBlog(userId, blogData);
+      await fetchPostBlogVip(userId, blogData);
       notification.success({
         message: "Create Successful",
         description: "You have posted successfully.",
         duration: 2,
       });
+
+      setRefreshTrending((prev) => !prev);
+      setRefreshYourBlog((prev) => !prev);
       resetForm();
-      fetchGetBlog(userId);
     } catch (error) {
       message.error(
         "Error posting blog: " + (error.response?.data || error.message)
       );
       console.error("Error posting blog:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,7 +142,13 @@ function Blog() {
   };
 
   const handleImageUpload = ({ fileList }) => {
-    setImages(fileList.map((file) => file.originFileObj || file.url)); // Xử lý cả File và URL
+    const files = fileList.map((file) => {
+      if (file.url) {
+        return file.url;
+      }
+      return file.originFileObj || file;
+    });
+    setImages(files);
   };
 
   const handleCancel = () => {
@@ -141,20 +171,15 @@ function Blog() {
       {
         label: "Trending",
         key: "1",
-        children: <TrendingTab />,
+        children: <TrendingTab refreshTrending={refreshTrending} />,
       },
       {
         label: "Your Blog",
         key: "2",
-        children: <YourBlog />,
-      },
-      {
-        label: "Archive",
-        key: "3",
-        children: <Archive />,
+        children: <YourBlog refreshYourBlog={refreshYourBlog} />,
       },
     ],
-    []
+    [refreshTrending, refreshYourBlog]
   );
 
   return (
@@ -224,17 +249,27 @@ function Blog() {
               <Upload
                 accept=".jpg,.jpeg,.png"
                 listType="picture-card"
-                fileList={images.map((image, index) => ({
-                  uid: index.toString(),
-                  name: image?.name || `image-${index}`, // Kiểm tra nếu image.name không tồn tại
-                  status: "done",
-                  url:
-                    image instanceof File ? URL.createObjectURL(image) : image, // Kiểm tra xem image là File hay URL
-                }))}
+                fileList={images.map((image, index) => {
+                  let url;
+                  if (image instanceof File) {
+                    url = URL.createObjectURL(image);
+                  } else if (typeof image === "string") {
+                    url = image;
+                  }
+
+                  return {
+                    uid: index.toString(),
+                    name: image?.name || `image-${index}`,
+                    status: "done",
+                    url,
+                  };
+                })}
                 onChange={handleImageUpload}
                 onRemove={(file) => {
-                  const newImages = images.filter((_, i) => i !== file.uid);
-                  setImages(newImages); // Xóa ảnh khi người dùng bấm remove
+                  const newImages = images.filter(
+                    (_, i) => i !== parseInt(file.uid, 10)
+                  );
+                  setImages(newImages);
                 }}
                 multiple
               >
@@ -249,6 +284,7 @@ function Blog() {
               type="primary"
               className="bg-blue-500 hover:bg-blue-600"
               onClick={handleOk}
+              loading={loading}
             >
               Create
             </Button>

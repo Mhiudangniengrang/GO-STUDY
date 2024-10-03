@@ -1,94 +1,38 @@
-// src/App.js
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  Avatar,
-  Button,
-  notification,
-  Checkbox,
-  Input,
-  Modal,
-} from "antd";
-import { useNavigate } from "react-router-dom";
+import { Avatar, Button, notification, message, Modal, Input } from "antd";
+import { Link, useNavigate } from "react-router-dom";
 import home from "../assets/account/home.png";
-import gao from "../assets/account/gao.png";
 import roomImg from "../assets/landing/roomimg.png";
 import room from "../assets/landing/room.png";
 import useAuthen from "../../hooks/useAuthen";
 import Cookies from "js-cookie";
-import {
-  EditOutlined,
-  CloseOutlined,
-  PlusOutlined,
-  MinusOutlined,
-  DeleteOutlined,
-  UploadOutlined,
-} from "@ant-design/icons";
 import RoomTask from "./roomTask";
-const { Meta } = Card;
-
-function Room() {
+import useRoom from "../../hooks/useRoom";
+import dayjs from "dayjs";
+import { BellOutlined } from "@ant-design/icons";
+const Room = () => {
   const navigate = useNavigate();
   const { isAuthenticated, infoUser, fetchUserInfo } = useAuthen();
-  const avatarUrl = infoUser.profileImage || "";
-  const userName = infoUser.fullName || "";
-  const email = infoUser.email || ";";
+  const { fetchGetRoom, listRoom, fetchPutUrl } = useRoom();
+  const avatarUrl = listRoom.user?.profileImage || "";
+  const userName = listRoom.user?.fullName || "User";
+  const email = infoUser?.email || "Email not available";
+
   useEffect(() => {
     const userId = Cookies.get("userId");
     if (isAuthenticated && !infoUser.fullName && userId) {
       fetchUserInfo(userId);
     }
-  }, [isAuthenticated, infoUser, fetchUserInfo]);
+    fetchGetRoom(userId);
+  }, [isAuthenticated, infoUser, fetchUserInfo, fetchGetRoom]);
 
-  const [rooms, setRooms] = useState([
-    {
-      id: "1",
-      name: "Ngôn ngữ Anh",
-      description: "Cung nhau hoc nao",
-      online: 0,
-    },
-    {
-      id: "2",
-      name: "Ngôn ngữ Trung",
-      description: "Hay hoc cung nhau ",
-      online: 0,
-    },
-    {
-      id: "3",
-      name: "Design",
-      description: "Hay hoc cung nhau ",
-      online: 0,
-    },
-    {
-      id: "4",
-      name: "Marketing",
-      description: "Hay hoc cung nhau ",
-      online: 0,
-    },
-    {
-      id: "5",
-      name: "Marketing",
-      description: "Hay hoc cung nhau ",
-      online: 0,
-    },
-    {
-      id: "6",
-      name: "Marketing",
-      description: "Hay hoc cung nhau ",
-      online: 0,
-    },
-  ]);
-  const lockedRooms = [
-    { id: "1", name: "Ngôn ngữ Anh", online: 0 },
-    { id: "2", name: "Ngôn ngữ Trung", online: 0 },
-  ];
-
+  const userRooms = listRoom.userRooms || [];
+  const moreRooms = listRoom.otherClassrooms || [];
+  const listFriend = listRoom.friendRequests || [];
+  console.log("list", listFriend);
   const joinRoom = (roomId, roomName) => {
-    setRooms((prevRooms) =>
-      prevRooms.map((room) =>
-        room.id === roomId ? { ...room, online: room.online + 1 } : room
-      )
-    );
+    const url = `http://localhost:3000/user/room/${roomId}`;
+    fetchPutUrl(roomId, url); // Send the URL to the server
     navigate(`/user/room/${roomId}`, { state: { roomName } });
   };
 
@@ -98,6 +42,7 @@ function Room() {
       description: "Bạn không thể vào phòng này.",
     });
   };
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [tasks, setTasks] = useState([
     "Hoàn thành bài tập lúc 8h",
@@ -139,10 +84,11 @@ function Room() {
     const updatedTasks = tasks.filter((_, i) => i !== index);
     setTasks(updatedTasks);
   };
+
   return (
-    <div className="flex flex-col md:flex-row  min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       {/* Sidebar */}
-      <div className="w-full md:w-1/5 bg-white p-10 ">
+      <div className="w-full md:w-1/5 bg-white p-10">
         <div className="bg-gradient-to-t from-[#C8E2FF] to-white p-4 rounded-lg shadow-md text-center w-[13rem] h-[20rem] mt-5">
           <div className="flex justify-center">
             <img src={home} alt="Upgrade Icon" />
@@ -151,20 +97,23 @@ function Room() {
             Upgrade to <span className="text-orange-500">PRO</span> for more
             features.
           </h3>
-          <Button
-            size="large"
-            className="mt-4 bg-blue-600 text-white py-2 px-4 rounded-full"
-          >
-            Upgrade
-          </Button>
+          <Link to="/user/pricing">
+            <Button
+              size="large"
+              className="mt-4 bg-blue-600 text-white py-2 px-4 rounded-full"
+            >
+              Upgrade
+            </Button>
+          </Link>
         </div>
 
         <div className="my-5">
-          <div className="flex items-center mb-4">
+          <div className="flex items-center justify-between mb-4">
             <Avatar size="large" src={avatarUrl} />
             <div className="ml-2">
               <div className="font-bold">{userName}</div>
             </div>
+            <BellOutlined className="text-lg " />
           </div>
           <img src={roomImg} alt="Room Image" className="w-full h-[12rem]" />
         </div>
@@ -190,17 +139,15 @@ function Room() {
         <div className="mb-8">
           <h3 className="text-xl font-medium text-[#034EA1] mb-3">Your Room</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {rooms.map((room) => (
+            {userRooms.map((room) => (
               <div
-                key={room.id}
+                key={room.classroomId}
                 className="bg-gray-100 p-5 py-10 space-y-5 rounded-lg shadow-md flex flex-col justify-between"
               >
                 <div className="flex justify-between items-center mb-4">
                   <div className="space-y-3">
                     <h2 className="text-xl font-bold">{room.name}</h2>
-                    <h4 className="text-sm text-gray-500">
-                      {room.description}
-                    </h4>
+                    <h4 className="text-sm text-gray-500">{room.nickname}</h4>
                   </div>
                   <div className="flex items-center">
                     <span className="bg-green-500 w-2 h-2 rounded-full mr-2"></span>
@@ -208,7 +155,7 @@ function Room() {
                   </div>
                 </div>
                 <button
-                  onClick={() => joinRoom(room.id, room.name)}
+                  onClick={() => joinRoom(room.classroomId, room.name)}
                   className="bg-blue-500 text-white py-2 rounded"
                 >
                   Join
@@ -219,37 +166,43 @@ function Room() {
         </div>
 
         {/* More Room Section */}
-        {/* <div className="mb-8">
+        <div className="mb-8">
           <h3 className="text-xl font-medium text-[#034EA1]">More Room</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {lockedRooms.map((room) => (
+            {moreRooms.map((room) => (
               <div
-                key={room.id}
+                key={room.classroomId}
                 className="bg-gray-100 p-5 py-10 space-y-5 rounded-lg shadow-md flex flex-col justify-between"
               >
                 <div className="flex justify-between items-center mb-4">
                   <div className="space-y-3">
                     <h2 className="text-xl font-bold">{room.name}</h2>
                     <h4 className="text-sm text-gray-500">
-                      This room is locked.
+                      {room.nickname || "This room is available."}
                     </h4>
                   </div>
                   <div className="flex items-center">
-                    <span className="bg-red-500 w-2 h-2 rounded-full mr-2"></span>
-                    <span>{room.online} online</span>
+                    <span className="bg-green-500 w-2 h-2 rounded-full mr-2"></span>
+                    <span>{room.online || 0} online</span>
                   </div>
                 </div>
                 <button
-                  onClick={notifyLocked}
-                  className="bg-blue-500 text-white py-2 rounded cursor-not-allowed"
-                  disabled
+                  onClick={
+                    room.locked
+                      ? notifyLocked
+                      : () => joinRoom(room.classroomId, room.name)
+                  }
+                  className={`bg-blue-500 text-white py-2 rounded ${
+                    room.locked ? "cursor-not-allowed" : ""
+                  }`}
+                  disabled={room.locked}
                 >
-                  Join
+                  {room.locked ? "Locked" : "Join"}
                 </button>
               </div>
             ))}
           </div>
-        </div> */}
+        </div>
       </div>
 
       {/* Right Sidebar */}
@@ -267,38 +220,37 @@ function Room() {
           </div>
 
           <h3 className="text-lg font-medium text-[#034EA1] flex justify-between">
-            New Members{" "}
+            Friends{" "}
             <span className="text-sm text-blue-500 cursor-pointer">
               See all
             </span>
           </h3>
           <div className="space-y-3">
-            {[
-              "Anne Couture",
-              "Miriam Soleil",
-              "Marie Laval",
-              "Mark Morain",
-            ].map((name, index) => (
-              <div
-                key={index}
-                className="flex items-center bg-white p-3 rounded-lg shadow-sm"
-              >
-                <Avatar size="small" />
-                <div className="ml-3">
-                  <div className="font-bold">{name}</div>
-                  <div className="text-sm text-gray-500">
-                    {5 + index * 15} min ago
+            {listFriend.length > 0 ? (
+              listFriend.map((friend) => (
+                <div
+                  key={friend.friendRequestId}
+                  className="flex items-center bg-white p-3 rounded-lg shadow-sm"
+                >
+                  <Avatar size="small" src={friend.recipient.profileImage} />
+                  <div className="ml-3">
+                    <div className="font-bold">{friend.requester.fullName}</div>
+                    <div className="text-sm text-gray-500">
+                      {dayjs(friend.sentAt).format("DD/MM/YYYY HH:mm")}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div className="text-gray-500">Không có yêu cầu kết bạn</div>
+            )}
           </div>
         </div>
 
         {/* Recent Activity Section */}
         <div>
           <h3 className="text-lg font-medium text-[#034EA1] flex justify-between">
-            Recent Activity{" "}
+            Members Online{" "}
             <span className="text-sm text-blue-500 cursor-pointer">
               See all
             </span>
@@ -324,8 +276,22 @@ function Room() {
           </div>
         </div>
       </div>
+
+      {/* Task Modal */}
+      <Modal
+        title={editIndex !== null ? "Edit Task" : "Add Task"}
+        open={isModalVisible}
+        onOk={handleSave}
+        onCancel={handleCancel}
+      >
+        <Input
+          value={currentTask}
+          onChange={(e) => setCurrentTask(e.target.value)}
+          placeholder="Enter your task"
+        />
+      </Modal>
     </div>
   );
-}
+};
 
 export default Room;

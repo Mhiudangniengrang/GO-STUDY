@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Image, Calendar, theme, Button, Dropdown, Space } from "antd";
+import {
+  Image,
+  Calendar,
+  theme,
+  Button,
+  Dropdown,
+  Space,
+  notification,
+} from "antd";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -13,10 +21,21 @@ import {
 import gao from "../assets/account/gao.png";
 import home from "../assets/account/home.png";
 import dayjs from "dayjs";
-import { DownOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  DownOutlined,
+  EditOutlined,
+  PlusOutlined,
+  FileTextOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router";
+import { Link } from "react-router-dom";
+import useTask from "../../hooks/useTask";
+import Cookies from "js-cookie";
+import useAuthen from "../../hooks/useAuthen";
+import useAttendance from "../../hooks/useAttendance";
+import useUserHome from "../../hooks/useUserHome";
 
-// Đăng ký các thành phần cần thiết
+// Register necessary components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -28,7 +47,20 @@ ChartJS.register(
 
 function Home() {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { infoUser, fetchUserInfo } = useAuthen();
+  const { userHome, fetchGetUserHome } = useUserHome();
+  const { fetchPostAttendance } = useAttendance();
+  const [isPresent, setIsPresent] = useState(true);
+
   const { token } = theme.useToken();
+  const { taskToday, fetchGetTaskToday } = useTask();
+  const userId = Cookies.get("userId");
+  useEffect(() => {
+    fetchGetTaskToday(userId);
+    fetchUserInfo(userId);
+    fetchGetUserHome(userId);
+  }, [fetchGetTaskToday, fetchUserInfo, userId]);
+
   const wrapperStyle = {
     width: 350,
     border: `1px solid ${token.colorBorderSecondary}`,
@@ -70,21 +102,25 @@ function Home() {
   };
 
   const today = new Date();
+
   const isToday =
     selectedDate.toDateString() === today.toDateString() ? "0" : "";
 
   const formatDate = (date) => {
     return dayjs(date).format("Do MMM, YYYY");
   };
+
   const users = [
     { rank: 1, name: "Daniil Medvedev", hours: "7.800h", icon: "⏲️" },
     { rank: 2, name: "Alexander Zverev", hours: "7.075h", icon: "⏲️" },
     { rank: 3, name: "Novak Djokovic", hours: "6.770h", icon: "⏲️" },
     { rank: 4, name: "Rafael Nadal", hours: "6.525h", icon: "⏲️" },
   ];
+
   const onClick = ({ key }) => {
-    message.info(`Click on item ${key}`);
+    notification.info(`Click on item ${key}`);
   };
+
   const items = [
     {
       label: "1st menu item",
@@ -99,6 +135,7 @@ function Home() {
       key: "3",
     },
   ];
+
   const activities = [
     { initials: "EK", color: "bg-blue-500" },
     { initials: "JH", color: "bg-purple-500" },
@@ -106,25 +143,69 @@ function Home() {
     { initials: "RP", color: "bg-teal-500" },
     { initials: "JK", color: "bg-red-400" },
   ];
+
   const navigate = useNavigate();
   const handleClick = () => {
     navigate("/user/calendar/task");
   };
+
+  const currentDay = dayjs().format("YYYY-MM-DD");
+
+  const hasCheckedInToday = () => {
+    if (userHome && userHome.attendances) {
+      return userHome.attendances.some(
+        (attendance) =>
+          dayjs(attendance.date).format("YYYY-MM-DD") === currentDay &&
+          attendance.isPresent
+      );
+    }
+    return false;
+  };
+
+  const handleAttendance = () => {
+    if (hasCheckedInToday()) {
+      notification.info({
+        message: "Attendance",
+        description: "You have already checked in today.",
+        duration: 2,
+      });
+    } else {
+      fetchPostAttendance(userId)
+        .then(() => {
+          fetchGetUserHome(userId);
+        })
+        .catch((error) => {
+          console.error("Error posting attendance:", error);
+        });
+    }
+  };
+
   return (
     <div className="flex flex-col items-center space-y-6 p-6 mb-5">
       <div className="flex justify-between w-full max-w-6xl">
         <div className="flex-col">
           <div className="p-4 flex mx-auto bg-[#BFDDFF] rounded-lg shadow-lg relative space-x-5 h-[15rem]">
-            <Image width={240} src={gao} />
+            <Image
+              width={250}
+              src={infoUser.profileImage || "https://via.placeholder.com/240"}
+              alt="Profile"
+              style={{
+                borderRadius: "10px",
+                objectFit: "cover",
+                height: "100%",
+              }}
+            />
             <div className="text-blue-900">
-              <h2 className="text-lg">Hi, Nguyen Van An</h2>
-              <h1 className="text-4xl font-extrabold">Welcome to Management</h1>
+              <h2 className="text-lg">Hi, {infoUser.fullName}</h2>
+              <h1 className="text-4xl font-extrabold">Welcome to Go! Study</h1>
               <p className="mt-2">
-                Project activity will be updated here. Click on the name section
-                to set your configuration.
+                Online learning not only opens the door to knowledge but also
+                gives you the freedom to explore, create and develop yourself
+                every day. Each lesson is a building block for your own future.
               </p>
             </div>
           </div>
+
           <div className="flex space-x-5">
             <div
               style={wrapperStyle}
@@ -141,23 +222,29 @@ function Home() {
                 Upgrade to <span className="text-orange-500">PRO</span> for more
                 features.
               </h3>
-              <Button
-                size="large"
-                className="mt-4 bg-blue-600 text-white py-2 px-4 rounded-full"
-              >
-                Upgrade
-              </Button>
+              <Link to="/user/pricing">
+                <Button
+                  size="large"
+                  className="mt-4 bg-blue-600 text-white py-2 px-4 rounded-full"
+                >
+                  Upgrade
+                </Button>
+              </Link>
             </div>
             {/* Days Card */}
             <div className="flex flex-col">
-              <div className="bg-white p-4 rounded-lg shadow-md flex items-center space-x-5 w-[15rem] h-[5rem] mt-4">
-                <span className="text-gray-400 text-2xl">🔥</span>
-                <div className="flex items-baseline">
-                  <span className="text-3xl font-bold">{isToday}</span>
-                  <span className="ml-1">Days</span>
+              {isPresent && (
+                <div className="bg-white p-4 rounded-lg shadow-md flex items-center space-x-5 w-[15rem] h-[5rem] mt-4">
+                  <span className="text-gray-400 text-2xl">🔥</span>
+                  <div className="flex items-baseline">
+                    <span className="text-3xl font-bold">
+                      {userHome.totalAttendace}
+                    </span>
+                    <span className="ml-1">Days</span>
+                  </div>
+                  <span className="text-green-500 text-2xl">✔️</span>
                 </div>
-                <span className="text-green-500 text-2xl">✔️</span>
-              </div>
+              )}
               {/* Additional Feature Cards */}
               <div className="flex space-x-6 mt-4">
                 <div className="bg-white p-4 rounded-lg shadow-md text-center w-60 transform rotate-6">
@@ -214,24 +301,35 @@ function Home() {
             <div className="w-[29rem]">
               <div className="bg-[#034EA1] text-white p-3 rounded-t-lg flex items-center">
                 <EditOutlined className="mr-2" />
+                <div className="text-center">
+                  <h1>Task today</h1>
+                </div>
               </div>
-              <div className="bg-gray-200">
-                {[1, 2].map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-center justify-between p-3 border-b border-gray-300"
-                  >
-                    <div className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      <span>Write Text</span>
+              <div className="bg-gray-100">
+                {taskToday.length > 0 ? (
+                  taskToday.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border-b border-gray-300"
+                    >
+                      <div className="flex items-center">
+                        <FileTextOutlined className="mr-3" />
+                        <span>{item.description}</span>
+                      </div>
+                      <span
+                        className={
+                          item.status ? "text-green-500" : "text-red-500"
+                        }
+                      >
+                        {item.status ? "Hoàn thành" : "Chưa hoàn thành"}
+                      </span>
                     </div>
-                    <button className="text-gray-600">-</button>
+                  ))
+                ) : (
+                  <div className="p-3 text-center text-gray-500">
+                    No tasks for today
                   </div>
-                ))}
-              </div>
-              <div className="flex items-center mt-2 text-blue-600 cursor-pointer">
-                <PlusOutlined className="mr-2" />
-                <span>Add new list</span>
+                )}
               </div>
             </div>
           </div>
@@ -243,7 +341,9 @@ function Home() {
           </div>
 
           <div className="flex justify-end">
-            <Button className="bg-[#034EA1] text-white my-3">Attendance</Button>
+            <Button className="mt-4" type="primary" onClick={handleAttendance}>
+              Attendance
+            </Button>
           </div>
           <div className="">
             <div className="flex justify-between">
@@ -254,37 +354,53 @@ function Home() {
             </div>
             <div className="flex space-x-4">
               <div className="bg-[#F5F5F5] p-5 rounded shadow-md w-60">
-                <h3 className="text-lg font-bold">You</h3>
+                <h3 className="text-sm font-bold">{userHome.fullName}</h3>
                 <div className="flex items-center text-gray-500">
-                  <span className="material-icons text-sm mr-1">schedule</span>
-                  <span>2:30 PM, Today</span>
+                  <span>
+                    {userHome.blogPost
+                      ? dayjs(userHome.blogPost.createdAt).format(
+                          "MMM D, YYYY h:mm A"
+                        )
+                      : "No blog post"}
+                  </span>
                 </div>
               </div>
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded w-20 h-20">
-                <PlusOutlined className="text-gray-500 text-2xl" />
+              <div className="flex flex-col items-center justify-center  w-[6.6rem] h-20">
+                {userHome.blogPost && userHome.blogPost.image && (
+                  <img
+                    src={userHome.blogPost.image}
+                    alt="Blog"
+                    className="mt-2 rounded"
+                  />
+                )}
               </div>
             </div>
           </div>
           <div className="my-5">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="font-bold text-lg">Activity</h2>
+              <h2 className="font-bold text-lg">Friend</h2>
               <a href="#" className="text-teal-600 font-bold">
                 View All
               </a>
             </div>
             <div className="space-y-3">
-              {activities.map((activity, index) => (
+              {userHome.listFriend.map((friend, index) => (
                 <div
                   key={index}
-                  className="bg-[#EEE6E2] p-3 rounded flex items-center shadow-md"
+                  className="bg-[#EEE6E2] p-4 rounded flex items-center shadow-md"
                 >
-                  <div
-                    className={`w-10 h-10 flex items-center justify-center rounded-full text-white ${activity.color}`}
-                  >
-                    {activity.initials}
-                  </div>
+                  <Image
+                    src={friend.recipient.profileImage}
+                    alt={friend.recipient.fullName}
+                    width={65}
+                    height={65}
+                    className="rounded-full"
+                  />
                   <div className="ml-4">
-                    <span className="font-bold">{activity.initials}</span>
+                    <span className="font-bold">
+                      {friend.recipient.fullName}
+                    </span>
+                    <p className="text-gray-500">{friend.recipient.email}</p>
                   </div>
                 </div>
               ))}

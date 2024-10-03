@@ -7,5 +7,11 @@ const login = (idToken) => {
 const getInfoUser = (userId) => {
   return axiosClient.get(`/api/User/GetUserProfile/${userId}`);
 };
+const updateProfile = (userId, userProfile) => {
+  return axiosClient.put(
+    `/api/User/update-profile?userid=${userId}`,
+    userProfile
+  );
+};
 
-export { login, getInfoUser };
+export { login, getInfoUser, updateProfile };

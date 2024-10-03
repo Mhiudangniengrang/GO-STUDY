@@ -26,7 +26,6 @@ const usePayment = create((set) => ({
 
   fetchPostPayment: async (paymentData) => {
     try {
-      console.log("Calling fetchPostPayment...");
       const res = await postPayment(paymentData);
       console.log("Payment Post Response:", res);
 
@@ -36,7 +35,7 @@ const usePayment = create((set) => ({
         return {
           qrCode: res.data.qrCode,
           orderCode: res.data.orderCode,
-          checkoutUrl: res.data.checkoutUrl, // Đảm bảo trả về checkoutUrl
+          checkoutUrl: res.data.checkoutUrl, 
         };
       } else {
         console.error("Unexpected status code:", res.status);
@@ -62,7 +61,6 @@ const usePayment = create((set) => ({
     }
   },
 
-  // Poll payment status periodically to check if the payment is successful
   pollPaymentStatus: async (orderCode, onSuccess) => {
     const intervalId = setInterval(async () => {
       try {
@@ -82,7 +80,7 @@ const usePayment = create((set) => ({
       } catch (err) {
         console.log("Error fetching payment status", err);
       }
-    }, 5000); // Poll every 5 seconds
+    }, 5000); 
   },
 }));
 

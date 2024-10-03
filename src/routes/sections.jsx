@@ -19,6 +19,7 @@ import RoomZego from "../section/room/roomZego";
 import useAuthen from "../hooks/useAuthen";
 import PaymentResult from "../section/payment/paymentResult";
 
+
 lazy(() => import("../pages/Authentication"));
 export const PaymentPage = lazy(() => import("../pages/PaymentPage"));
 export const RulesPage = lazy(() => import("../pages/RulesPage"));
@@ -29,10 +30,11 @@ export const RoomPage = lazy(() => import("../pages/RoomPage"));
 export const HomePage = lazy(() => import("../pages/HomePage"));
 export const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 export const CalendarPage = lazy(() => import("../pages/CalendarPage"));
+export const PricingPage = lazy(() => import("../pages/PricingPage"));
 
 export const Router = () => {
   const { isAuthenticated, infoUser } = useAuthen();
-
+  const specialization = infoUser.specialization;
   const routes = useRoutes([
     {
       path: "/",
@@ -87,6 +89,10 @@ export const Router = () => {
           element: <PaymentPage />,
         },
         {
+          path: "/user/pricing",
+          element: <PricingPage />,
+        },
+        {
           path: "/user/rules",
           element: <RulesPage />,
         },
@@ -110,6 +116,7 @@ export const Router = () => {
           path: "/user/calendar/task",
           element: <CalendarPage />,
         },
+
         {
           path: "*",
           element: <Error404 />,

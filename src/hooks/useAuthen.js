@@ -1,6 +1,6 @@
 import Cookies from "js-cookie";
 import { create } from "zustand";
-import { getInfoUser } from "../api/authenApi";
+import { getInfoUser, updateProfile } from "../api/authenApi";
 import { notification } from "antd";
 import { useNavigate } from "react-router-dom";
 
@@ -10,7 +10,6 @@ const useAuthen = create((set) => ({
   fetchUserInfo: async (userId) => {
     try {
       const res = await getInfoUser(userId);
-      console.log("info", res.data.role);
       if (res && res.status === 200) {
         set({ infoUser: res.data || {} });
       } else if (res.status === 401 || res.status === 403) {
@@ -18,6 +17,32 @@ const useAuthen = create((set) => ({
       }
     } catch (err) {
       console.error("Error fetching userInfo", err);
+    }
+  },
+  fetchEditUser: async (userId, userProfile) => {
+    try {
+      const res = await updateProfile(userId, userProfile); 
+      if (res && res.status === 200) {
+        set({ infoUser: { ...res.data } }); 
+        notification.success({
+          message: "Profile Updated",
+          description: "Your profile has been updated successfully.",
+          duration: 2,
+        });
+      } else {
+        notification.error({
+          message: "Update Failed",
+          description: "Failed to update your profile. Please try again.",
+          duration: 2,
+        });
+      }
+    } catch (err) {
+      console.error("Error updating user profile", err);
+      notification.error({
+        message: "Error",
+        description: "An error occurred while updating your profile.",
+        duration: 2,
+      });
     }
   },
   login: () => {

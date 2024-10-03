@@ -12,61 +12,59 @@ import CryptoJS from "crypto-js";
 function Authen() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const navigate = useNavigate();
-  const { fetchUserInfo } = useAuthen();
+  const { fetchUserInfo, infoUser } = useAuthen();
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    const token = credentialResponse.credential;
-    console.log("token", token);
-    try {
-      setIsLoggingIn(true);
-      const response = await login(token);
-      const newToken = response.data.token.accessToken;
+const handleGoogleSuccess = async (credentialResponse) => {
+  const token = credentialResponse.credential;
+  console.log("token", token);
+  try {
+    setIsLoggingIn(true);
+    const response = await login(token);
+    const newToken = response.data.token.accessToken;
 
-      if (typeof newToken === "string") {
-        const decoded = jwtDecode(newToken);
-        const userId = decoded.sid;
+    if (typeof newToken === "string") {
+      const decoded = jwtDecode(newToken);
+      const userId = decoded.sid;
 
-        const encryptedToken = CryptoJS.AES.encrypt(newToken, "tao").toString();
+      const encryptedToken = CryptoJS.AES.encrypt(newToken, "tao").toString();
 
-        Cookies.set("__token", encryptedToken, {
-          expires: 7,
-        });
-        Cookies.set("userId", userId, {
-          expires: 7,
-        });
+      Cookies.set("__token", encryptedToken, { expires: 7 });
+      Cookies.set("userId", userId, { expires: 7 });
 
-        await fetchUserInfo(userId);
+      // Fetch user information and update state
+      await fetchUserInfo(userId);
 
-        notification.success({
-          message: "Login Successful",
-          description: "You have successfully logged in.",
-          duration: 2,
-        });
-
-        navigate("/user");
-      } else {
-        console.error("Invalid token format received");
-        notification.error({
-          message: "Login Failed",
-          description: "Invalid token received.",
-          duration: 2,
-        });
-      }
-    } catch (error) {
-      notification.error({
-        message: "Login Failed",
-        description: "An error occurred during login. Please try again.",
+      notification.success({
+        message: "Login Successful",
+        description: "You have successfully logged in.",
         duration: 2,
       });
-      console.error(
-        "Error posting token:",
-        error.response?.data || error.message
-      );
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
 
+      // Use infoUser from useAuthen to check specialization
+      if (infoUser.specialization && infoUser.specialization.length > 0) {
+        navigate("/user/home");
+      } else {
+        navigate("/user");
+      }
+    } else {
+      console.error("Invalid token format received");
+      notification.error({
+        message: "Login Failed",
+        description: "Invalid token received.",
+        duration: 2,
+      });
+    }
+  } catch (error) {
+    notification.error({
+      message: "Login Failed",
+      description: "An error occurred during login. Please try again.",
+      duration: 2,
+    });
+    console.error("Error posting token:", error.response?.data || error.message);
+  } finally {
+    setIsLoggingIn(false);
+  }
+};
   return (
     <div className="p-12 w-[100%] max-w-[28rem]">
       <Form name="google_login" className="space-y-6">

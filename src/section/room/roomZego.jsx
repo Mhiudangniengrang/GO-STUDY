@@ -4,6 +4,12 @@ import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { v4 } from "uuid";
 import { Card, Typography } from "antd";
 import room from "../assets/account/rom.png";
+import AudioFile1 from "../assets/music/lofi-orchestra-162306.mp3";
+import AudioFile2 from "../assets/music/lofi-song-jinsei-by-lofium-236730.mp3";
+import AudioFile3 from "../assets/music/lofi-song-room-by-lofium-242714.mp3";
+import AudioFile4 from "../assets/music/playa-del-sol-latin-lofi-160149.mp3";
+import AudioFile5 from "../assets/music/satisfying-lofi-for-focus-study-amp-working-242103.mp3";
+import AudioPlayer from "./audioPlayer";
 const { Title, Text } = Typography;
 
 function RoomZego() {
@@ -19,7 +25,7 @@ function RoomZego() {
       serverSecret,
       roomId,
       v4(),
-      "Enter name..."
+      "You"
     );
 
     const ui = ZegoUIKitPrebuilt.create(kitToken);
@@ -32,9 +38,7 @@ function RoomZego() {
             window.location.protocol +
             "//" +
             window.location.host +
-            window.location.pathname +
-            "?roomID=" +
-            roomId,
+            window.location.pathname,
         },
       ],
       scenario: {
@@ -46,10 +50,15 @@ function RoomZego() {
       ui.destroy();
     };
   }, [roomId]);
-
+  const audioFiles = [
+    AudioFile1,
+    AudioFile2,
+    AudioFile3,
+    AudioFile4,
+    AudioFile5,
+  ];
   return (
     <div
-      className="flex items-center justify-center h-screen p-15"
       style={{
         backgroundImage: `url(${room})`,
         backgroundSize: "cover",
@@ -57,9 +66,8 @@ function RoomZego() {
         backgroundPosition: "center",
       }}
     >
-        
-
-        <div id="meeting-container"></div>
+      {" "}
+      <AudioPlayer audioFiles={audioFiles}  />;<div id="meeting-container"></div>
     </div>
   );
 }
