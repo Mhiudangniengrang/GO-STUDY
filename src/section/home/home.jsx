@@ -7,6 +7,7 @@ import {
   Dropdown,
   Space,
   notification,
+  Avatar,
 } from "antd";
 import { Bar } from "react-chartjs-2";
 import {
@@ -55,6 +56,7 @@ function Home() {
   const { token } = theme.useToken();
   const { taskToday, fetchGetTaskToday } = useTask();
   const userId = Cookies.get("userId");
+
   useEffect(() => {
     fetchGetTaskToday(userId);
     fetchUserInfo(userId);
@@ -67,12 +69,29 @@ function Home() {
     borderRadius: token.borderRadiusLG,
   };
 
+  const calculateTimeActive = () => {
+    const days = ["M", "T", "W", "Th", "F", "S"];
+    const timeActive = Array(6).fill(0);
+
+    if (userHome && userHome.attendances) {
+      userHome.attendances.forEach((attendance) => {
+        const dayIndex = dayjs(attendance.date).day() - 1;
+        if (dayIndex >= 0 && dayIndex < 6) {
+          // Assuming attendance has a duration or start and end time to calculate hours
+          timeActive[dayIndex] += attendance.hours || 1; // Example increment
+        }
+      });
+    }
+
+    return timeActive;
+  };
+
   const data = {
     labels: ["M", "T", "W", "Th", "F", "S"],
     datasets: [
       {
         label: "Time Active",
-        data: [2, 3, 1, 2.5, 3, 1],
+        data: calculateTimeActive(),
         backgroundColor: "rgba(54, 162, 235, 0.5)",
         borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,
@@ -384,26 +403,38 @@ function Home() {
               </a>
             </div>
             <div className="space-y-3">
-              {userHome.listFriend.map((friend, index) => (
-                <div
-                  key={index}
-                  className="bg-[#EEE6E2] p-4 rounded flex items-center shadow-md"
-                >
-                  <Image
-                    src={friend.recipient.profileImage}
-                    alt={friend.recipient.fullName}
-                    width={65}
-                    height={65}
-                    className="rounded-full"
-                  />
-                  <div className="ml-4">
-                    <span className="font-bold">
-                      {friend.recipient.fullName}
-                    </span>
-                    <p className="text-gray-500">{friend.recipient.email}</p>
-                  </div>
-                </div>
-              ))}
+              {userHome.listFriend && userHome.listFriend.length > 0 ? (
+                userHome.listFriend.map((friend, index) => {
+                  const participant = friend.recipient || friend.requester;
+                  if (!participant) return null;
+                  return (
+                    <div
+                      key={index}
+                      className="bg-[#EEE6E2] p-4 rounded flex items-center shadow-md"
+                    >
+                      <Avatar
+                        src={
+                          participant.profileImage ||
+                          "https://via.placeholder.com/240"
+                        }
+                        alt={participant.fullName || "Unknown"}
+                        className="rounded-full"
+                        size="large"
+                      />
+                      <div className="ml-4">
+                        <span className="font-bold">
+                          {participant.fullName || "Unknown"}
+                        </span>
+                        <p className="text-gray-500">
+                          {participant.email || "No email"}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-gray-500">No friends found</div>
+              )}
             </div>
           </div>
         </div>

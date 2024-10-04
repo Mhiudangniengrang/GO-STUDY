@@ -1,5 +1,4 @@
-// Import necessary libraries
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { Form, notification } from "antd";
@@ -12,59 +11,69 @@ import CryptoJS from "crypto-js";
 function Authen() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const navigate = useNavigate();
-  const { fetchUserInfo, infoUser } = useAuthen();
+  const { fetchUserInfo, infoUser, login: authenticate } = useAuthen();
 
-const handleGoogleSuccess = async (credentialResponse) => {
-  const token = credentialResponse.credential;
-  console.log("token", token);
-  try {
-    setIsLoggingIn(true);
-    const response = await login(token);
-    const newToken = response.data.token.accessToken;
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      Cookies.remove("__token");
+      Cookies.remove("userId");
+    };
 
-    if (typeof newToken === "string") {
-      const decoded = jwtDecode(newToken);
-      const userId = decoded.sid;
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
-      const encryptedToken = CryptoJS.AES.encrypt(newToken, "tao").toString();
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
-      Cookies.set("__token", encryptedToken, { expires: 7 });
-      Cookies.set("userId", userId, { expires: 7 });
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const token = credentialResponse.credential;
+    try {
+      setIsLoggingIn(true);
+      const response = await login(token);
+      const newToken = response.data.token.accessToken;
 
-      // Fetch user information and update state
-      await fetchUserInfo(userId);
+      if (typeof newToken === "string") {
+        const decoded = jwtDecode(newToken);
+        const userId = decoded.sid;
 
-      notification.success({
-        message: "Login Successful",
-        description: "You have successfully logged in.",
-        duration: 2,
-      });
+        const encryptedToken = CryptoJS.AES.encrypt(newToken, "tao").toString();
 
-      // Use infoUser from useAuthen to check specialization
-      if (infoUser.specialization && infoUser.specialization.length > 0) {
-        navigate("/user/home");
+        Cookies.set("__token", encryptedToken, { expires: 7 });
+        Cookies.set("userId", userId, { expires: 7 });
+
+        await fetchUserInfo(userId);
+        authenticate();
+
+        notification.success({
+          message: "Login Successful",
+          description: "You have successfully logged in.",
+          duration: 2,
+        });
+
+        if (infoUser.specialization && infoUser.specialization.length > 0) {
+          navigate("/user/home");
+        } else {
+          navigate("/user");
+        }
       } else {
-        navigate("/user");
+        throw new Error("Invalid token format received");
       }
-    } else {
-      console.error("Invalid token format received");
+    } catch (error) {
       notification.error({
         message: "Login Failed",
-        description: "Invalid token received.",
+        description: "An error occurred during login. Please try again.",
         duration: 2,
       });
+      console.error(
+        "Error posting token:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setIsLoggingIn(false);
     }
-  } catch (error) {
-    notification.error({
-      message: "Login Failed",
-      description: "An error occurred during login. Please try again.",
-      duration: 2,
-    });
-    console.error("Error posting token:", error.response?.data || error.message);
-  } finally {
-    setIsLoggingIn(false);
-  }
-};
+  };
+
   return (
     <div className="p-12 w-[100%] max-w-[28rem]">
       <Form name="google_login" className="space-y-6">

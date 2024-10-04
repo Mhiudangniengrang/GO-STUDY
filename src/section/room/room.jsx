@@ -10,6 +10,7 @@ import RoomTask from "./roomTask";
 import useRoom from "../../hooks/useRoom";
 import dayjs from "dayjs";
 import { BellOutlined } from "@ant-design/icons";
+
 const Room = () => {
   const navigate = useNavigate();
   const { isAuthenticated, infoUser, fetchUserInfo } = useAuthen();
@@ -29,10 +30,11 @@ const Room = () => {
   const userRooms = listRoom.userRooms || [];
   const moreRooms = listRoom.otherClassrooms || [];
   const listFriend = listRoom.friendRequests || [];
-  console.log("list", listFriend);
+  const userRoomIds = new Set(userRooms.map((room) => room.classroomId));
+
   const joinRoom = (roomId, roomName) => {
     const url = `http://localhost:3000/user/room/${roomId}`;
-    fetchPutUrl(roomId, url); // Send the URL to the server
+    fetchPutUrl(roomId, url);
     navigate(`/user/room/${roomId}`, { state: { roomName } });
   };
 
@@ -88,7 +90,7 @@ const Room = () => {
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
       {/* Sidebar */}
-      <div className="w-full md:w-1/5 bg-white p-10">
+      <div className="w-full md:w-1/5 bg-white p-5">
         <div className="bg-gradient-to-t from-[#C8E2FF] to-white p-4 rounded-lg shadow-md text-center w-[13rem] h-[20rem] mt-5">
           <div className="flex justify-center">
             <img src={home} alt="Upgrade Icon" />
@@ -188,16 +190,18 @@ const Room = () => {
                 </div>
                 <button
                   onClick={
-                    room.locked
-                      ? notifyLocked
-                      : () => joinRoom(room.classroomId, room.name)
+                    userRoomIds.has(room.classroomId)
+                      ? () => joinRoom(room.classroomId, room.name)
+                      : notifyLocked
                   }
                   className={`bg-blue-500 text-white py-2 rounded ${
-                    room.locked ? "cursor-not-allowed" : ""
+                    userRoomIds.has(room.classroomId)
+                      ? ""
+                      : "cursor-not-allowed"
                   }`}
-                  disabled={room.locked}
+                  disabled={!userRoomIds.has(room.classroomId)}
                 >
-                  {room.locked ? "Locked" : "Join"}
+                  {userRoomIds.has(room.classroomId) ? "Join" : "Locked"}
                 </button>
               </div>
             ))}
@@ -230,9 +234,9 @@ const Room = () => {
               listFriend.map((friend) => (
                 <div
                   key={friend.friendRequestId}
-                  className="flex items-center bg-white p-3 rounded-lg shadow-sm"
+                  className="flex items-center bg-white py-3 rounded-lg shadow-sm"
                 >
-                  <Avatar size="small" src={friend.recipient.profileImage} />
+                  <Avatar size="large" src={friend.recipient.profileImage} />
                   <div className="ml-3">
                     <div className="font-bold">{friend.requester.fullName}</div>
                     <div className="text-sm text-gray-500">

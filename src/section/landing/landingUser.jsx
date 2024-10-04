@@ -123,7 +123,7 @@ function LandingUser() {
       .filter((specializationId) => specializationId !== null);
 
     fetchPostSpecialization(userId, specializationIds);
-    navigate("/user/home"); // Navigate only if there are valid new selections
+    navigate("/user/home"); 
   };
 
   return (

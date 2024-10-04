@@ -133,6 +133,7 @@ const RoomTask = () => {
         style={{ backgroundColor: "#034EA1" }}
       >
         <EditOutlined />
+        <p>Task Today</p>
         <CloseOutlined />
       </div>
 

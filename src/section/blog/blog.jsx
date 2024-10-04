@@ -193,11 +193,6 @@ function Blog() {
             <p className="text-lg text-orange-600">Have a nice day!</p>
           </div>
           <div className="w-full">
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              className="mb-4"
-            />
             <div className="flex flex-col md:flex-row justify-between mt-3">
               <Tabs
                 defaultActiveKey="2"
