@@ -67,9 +67,10 @@ function RoomZego() {
       }}
     >
       {" "}
-      <AudioPlayer audioFiles={audioFiles}  />;<div id="meeting-container"></div>
+      <AudioPlayer audioFiles={audioFiles}  />
+      <div id="meeting-container"></div>
     </div>
   );
 }
 
-export default RoomZego;
+export default RoomZego
